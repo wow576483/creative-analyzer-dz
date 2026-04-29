@@ -207,6 +207,12 @@ def _format_srt_time(t: float) -> str:
     if ms == 1000:
         s += 1
         ms = 0
+    if s == 60:
+        m += 1
+        s = 0
+    if m == 60:
+        h += 1
+        m = 0
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
