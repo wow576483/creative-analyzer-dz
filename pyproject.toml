@@ -1,0 +1,83 @@
+[project]
+name = "creative-analyzer-dz"
+version = "0.1.0"
+description = "Analyze Chinese ad videos and generate Algerian-darija creative suggestions (Hook/Body/Proof/CTA) optimized for COD ecommerce."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Kin", email = "kinzo25ala@gmail.com" }]
+keywords = ["advertising", "creative", "algeria", "darija", "dropshipping", "video", "whisper"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+dependencies = [
+    "click>=8.1",
+    "pydantic>=2.6",
+    "jinja2>=3.1",
+    "openai>=1.40",
+    "scenedetect[opencv]>=0.6.4",
+    "faster-whisper>=1.0.3",
+    "pillow>=10.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-multipart>=0.0.9",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "types-Pillow",
+]
+
+[project.scripts]
+creative-analyzer = "analyzer.cli:cli"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["analyzer*", "webapp*"]
+exclude = ["tests*", "runs*", "uploads*"]
+
+[tool.setuptools.package-data]
+"analyzer" = ["templates/*.j2"]
+"webapp"   = ["static/*.html", "static/*.css", "static/*.js"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "SIM", "N"]
+ignore = [
+    "E501",  # line length handled by formatter
+    "B008",  # FastAPI Depends pattern
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+ignore_missing_imports = true
+disallow_untyped_defs = false
+follow_imports = "silent"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

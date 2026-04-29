@@ -1,0 +1,106 @@
+"""Pydantic schemas shared across the pipeline."""
+
+from __future__ import annotations
+
+from enum import Enum
+
+from pydantic import BaseModel, Field
+
+
+class SceneRole(str, Enum):
+    HOOK = "hook"
+    BODY = "body"
+    PROOF = "proof"
+    CTA = "cta"
+    TRANSITION = "transition"
+
+
+class ProductInfo(BaseModel):
+    name: str
+    description: str = ""
+    price: float | None = None
+    old_price: float | None = None
+    currency: str = "DZD"
+    target_audience: str = "consommateurs algériens"
+    landing_phone: str | None = None  # e.g. "0555 12 34 56"
+    free_shipping: bool = True
+
+    @property
+    def price_label(self) -> str:
+        if self.price is None:
+            return ""
+        return f"{int(self.price) if self.price.is_integer() else self.price} {self.currency}"
+
+    @property
+    def discount_label(self) -> str | None:
+        if self.price is None or self.old_price is None or self.old_price <= self.price:
+            return None
+        pct = round((self.old_price - self.price) / self.old_price * 100)
+        return f"-{pct}%"
+
+
+class SceneSlice(BaseModel):
+    """One detected scene from PySceneDetect."""
+
+    index: int
+    start: float
+    end: float
+    keyframe_path: str
+    audio_path: str
+    video_path: str
+
+    @property
+    def duration(self) -> float:
+        return self.end - self.start
+
+
+class SceneTranscript(BaseModel):
+    text: str
+    language: str | None = None
+
+
+class SceneVision(BaseModel):
+    description: str = ""
+    on_screen_text: str = ""
+    detected_subjects: list[str] = Field(default_factory=list)
+
+
+class AnalyzedScene(BaseModel):
+    slice: SceneSlice
+    transcript: SceneTranscript
+    vision: SceneVision
+    role: SceneRole = SceneRole.BODY
+    role_confidence: float = 0.5
+    role_reason: str = ""
+
+
+class CreativePart(BaseModel):
+    """One darija-adapted creative element of a given role."""
+
+    role: SceneRole
+    text_darija: str
+    on_screen_text: str = ""
+    visual_direction: str = ""
+    duration_seconds: float = 3.0
+    source_scene_indexes: list[int] = Field(default_factory=list)
+
+
+class CreativeScript(BaseModel):
+    """A full Hook → Body → Proof → CTA script ready to shoot."""
+
+    title: str
+    hook: CreativePart
+    body: CreativePart
+    proof: CreativePart
+    cta: CreativePart
+    angle: str = ""  # e.g. "problem-solution", "before-after", "social-proof"
+    estimated_duration_seconds: float = 30.0
+    notes: list[str] = Field(default_factory=list)
+
+
+class AnalysisResult(BaseModel):
+    product: ProductInfo
+    source_video: str
+    scenes: list[AnalyzedScene]
+    creatives: list[CreativeScript]
+    parts_pool: dict[str, list[CreativePart]] = Field(default_factory=dict)

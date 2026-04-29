@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>تقرير كرياتيف — {{ result.product.name }}</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --ink:#e2e8f0; --muted:#94a3b8; --accent:#22d3ee; --hook:#f472b6; --body:#facc15; --proof:#34d399; --cta:#60a5fa; }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tajawal,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:24px;line-height:1.6}
+  h1,h2,h3{color:#fff}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .roles{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .pill{padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .role-hook{background:var(--hook);color:#3b0764}
+  .role-body{background:var(--body);color:#422006}
+  .role-proof{background:var(--proof);color:#022c22}
+  .role-cta{background:var(--cta);color:#0c1530}
+  .role-transition{background:#475569;color:#cbd5e1}
+  .scenes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .scene{background:#0b1224;border:1px solid #1f2a44;border-radius:10px;overflow:hidden}
+  .scene img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+  .scene .meta{padding:8px;font-size:12px;color:var(--muted)}
+  .creative{border-left:4px solid var(--accent);padding-right:14px;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;margin-top:6px}
+  th,td{text-align:right;padding:8px;border-bottom:1px solid #243049;vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:13px}
+  code{background:#0b1224;padding:2px 6px;border-radius:6px;color:#a5f3fc}
+  .muted{color:var(--muted);font-size:13px}
+  .notes li{color:#cbd5e1}
+  .badge{display:inline-block;background:#0b1224;color:#a5f3fc;padding:2px 8px;border-radius:6px;font-size:12px;margin-left:6px}
+</style>
+</head>
+<body>
+  <h1>🇩🇿 تقرير كرياتيف — {{ result.product.name }}</h1>
+  <div class="muted">
+    {% if result.product.price %}{{ result.product.price_label }}{% endif %}
+    {% if result.product.discount_label %}<span class="badge">{{ result.product.discount_label }}</span>{% endif %}
+    <span class="badge">{{ result.scenes|length }} مشهد</span>
+    <span class="badge">{{ result.creatives|length }} كرياتيف</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>المشاهد المكتشفة</h2>
+      <div class="scenes">
+        {% for s in result.scenes %}
+        <div class="scene">
+          <img src="{{ s.slice.keyframe_path }}" alt="scene {{ s.slice.index }}">
+          <div class="meta">
+            <div>#{{ s.slice.index + 1 }} • {{ "%.1f"|format(s.slice.duration) }}s</div>
+            <div class="roles"><span class="pill role-{{ s.role.value }}">{{ s.role.value }}</span></div>
+            <div style="margin-top:6px">{{ s.transcript.text|truncate(70, true) or "—" }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>أجزاء جاهزة (Pool)</h2>
+      {% for role, parts in pool.items() %}
+        <h3>{{ role.value|upper }} <span class="badge">{{ parts|length }}</span></h3>
+        <table>
+          <thead><tr><th>#</th><th>النص بالدارجة</th><th>على الشاشة</th><th>توجيه بصري</th></tr></thead>
+          <tbody>
+          {% for p in parts %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ p.text_darija }}</td>
+              <td><code>{{ p.on_screen_text }}</code></td>
+              <td class="muted">{{ p.visual_direction }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      {% endfor %}
+    </div>
+
+    <div class="card">
+      <h2>سكريبتات الكرياتيف</h2>
+      {% for c in result.creatives %}
+      <div class="creative">
+        <h3>{{ c.title }} <span class="badge">{{ c.angle }}</span> <span class="badge">~{{ "%.0f"|format(c.estimated_duration_seconds) }}s</span></h3>
+        <table>
+          <tbody>
+            <tr><th>🪝 Hook</th><td>{{ c.hook.text_darija }}<br><code>{{ c.hook.on_screen_text }}</code><div class="muted">{{ c.hook.visual_direction }}</div></td></tr>
+            <tr><th>📖 Body</th><td>{{ c.body.text_darija }}<br><code>{{ c.body.on_screen_text }}</code><div class="muted">{{ c.body.visual_direction }}</div></td></tr>
+            <tr><th>✅ Proof</th><td>{{ c.proof.text_darija }}<br><code>{{ c.proof.on_screen_text }}</code><div class="muted">{{ c.proof.visual_direction }}</div></td></tr>
+            <tr><th>📞 CTA</th><td>{{ c.cta.text_darija }}<br><code>{{ c.cta.on_screen_text }}</code><div class="muted">{{ c.cta.visual_direction }}</div></td></tr>
+          </tbody>
+        </table>
+        <ul class="notes">
+          {% for n in c.notes %}<li>{{ n }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card">
+      <h2>قواعد السوق الجزائري</h2>
+      <ul class="muted">
+        {% for r in market_rules %}<li>{{ r }}</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

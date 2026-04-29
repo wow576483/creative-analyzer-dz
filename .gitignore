@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+
+# Tooling
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Env
+.env
+.env.local
+
+# Runtime artifacts
+runs/
+uploads/
+out/
+*.mp4
+*.mp3
+*.wav
+*.srt
+*.vtt
+!examples/**/*.mp4
+!tests/fixtures/**
+
+# Models cache
+~/.cache/whisper/
+models/

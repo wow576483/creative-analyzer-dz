@@ -1,0 +1,62 @@
+# تقرير تحليل الإعلان وتوليد كرياتيفات للسوق الجزائري 🇩🇿
+
+**المنتج:** {{ result.product.name }}
+{% if result.product.description %}**الوصف:** {{ result.product.description }}
+{% endif %}
+{% if result.product.price %}**السعر:** {{ result.product.price_label }}{% if result.product.discount_label %} ({{ result.product.discount_label }} خصم){% endif %}
+{% endif %}
+**الفيديو المصدر:** `{{ result.source_video }}`
+**عدد المشاهد المكتشفة:** {{ result.scenes|length }}
+
+---
+
+## 1) المشاهد المصنّفة
+
+| # | المدة | الدور | المحتوى الصوتي | الوصف البصري |
+|---|------:|:-----:|----|----|
+{% for s in result.scenes %}| {{ s.slice.index + 1 }} | {{ "%.1f"|format(s.slice.duration) }}s | **{{ s.role.value }}** | {{ s.transcript.text|truncate(80, true) or "—" }} | {{ s.vision.description|truncate(80, true) or "—" }} |
+{% endfor %}
+
+---
+
+## 2) أجزاء جاهزة للدمج (Pool)
+
+{% for role, parts in pool.items() %}
+### {{ role.value|upper }} ({{ parts|length }} بدائل)
+
+{% for p in parts %}
+**#{{ loop.index }}.** {{ p.text_darija }}
+- نص على الشاشة: `{{ p.on_screen_text }}`
+- توجيه بصري: {{ p.visual_direction }}
+- المدة المقترحة: {{ "%.1f"|format(p.duration_seconds) }}s
+
+{% endfor %}
+{% endfor %}
+
+---
+
+## 3) سكريبتات كرياتيف جاهزة ({{ result.creatives|length }})
+
+{% for c in result.creatives %}
+### {{ c.title }}
+
+> الزاوية: **{{ c.angle }}** • المدة الكلية: ~{{ "%.0f"|format(c.estimated_duration_seconds) }}s
+
+| الجزء | النص بالدارجة | نص على الشاشة | توجيه بصري |
+|-------|---------------|----------------|--------------|
+| 🪝 Hook | {{ c.hook.text_darija }} | `{{ c.hook.on_screen_text }}` | {{ c.hook.visual_direction }} |
+| 📖 Body | {{ c.body.text_darija }} | `{{ c.body.on_screen_text }}` | {{ c.body.visual_direction }} |
+| ✅ Proof | {{ c.proof.text_darija }} | `{{ c.proof.on_screen_text }}` | {{ c.proof.visual_direction }} |
+| 📞 CTA | {{ c.cta.text_darija }} | `{{ c.cta.on_screen_text }}` | {{ c.cta.visual_direction }} |
+
+**ملاحظات إنتاج:**
+{% for n in c.notes %}- {{ n }}
+{% endfor %}
+
+---
+{% endfor %}
+
+## 4) قواعد السوق الجزائري المطبَّقة
+
+{% for r in market_rules %}- {{ r }}
+{% endfor %}
