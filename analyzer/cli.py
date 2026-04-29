@@ -44,6 +44,8 @@ def cli() -> None:
     type=click.Choice(["zip_balanced", "cartesian"]),
     default="zip_balanced",
 )
+@click.option("--dub", "dub", is_flag=True, default=False, help="Render a final dubbed MP4 with Gemini TTS.")
+@click.option("--burn-subs", "burn_subs", is_flag=True, default=False, help="Burn darija subtitles into the dubbed MP4.")
 @click.option("-v", "--verbose", is_flag=True, default=False)
 def analyze_cmd(
     video: Path,
@@ -58,6 +60,8 @@ def analyze_cmd(
     n_creatives: int,
     per_role: int,
     strategy: str,
+    dub: bool,
+    burn_subs: bool,
     verbose: bool,
 ) -> None:
     """Run the full pipeline on VIDEO and write a creative report."""
@@ -89,6 +93,8 @@ def analyze_cmd(
         n_creatives=n_creatives,
         per_role=per_role,
         strategy=strategy,
+        dub=dub,
+        burn_subs=burn_subs,
     )
 
     click.secho(
@@ -99,6 +105,12 @@ def analyze_cmd(
     click.echo(f"  - تقرير HTML    : {out_dir / 'report.html'}")
     click.echo(f"  - JSON          : {out_dir / 'analysis.json'}")
     click.echo(f"  - CSV           : {out_dir / 'creatives.csv'}")
+    if dub:
+        dubbed = out_dir / "final_dubbed.mp4"
+        if dubbed.exists():
+            click.secho(f"  - فيديو مدبلج    : {dubbed}", fg="cyan")
+        else:
+            click.secho("  - الدبلجة فشلت — راجع اللوغ.", fg="yellow")
 
 
 @cli.command("serve")

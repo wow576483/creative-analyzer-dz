@@ -64,6 +64,8 @@
 
     <div class="row">
       <label class="toggle"><input id="free_shipping" type="checkbox" checked> توصيل مجاني لكل ولايات الوطن (58)</label>
+      <label class="toggle"><input id="dub" type="checkbox"> 🎙️ ولّد فيديو مدبلج بالدارجة (Gemini TTS)</label>
+      <label class="toggle"><input id="burn_subs" type="checkbox"> 📝 احرق الترجمة على الفيديو</label>
       <button id="go" class="btn" disabled>حلّل الفيديو</button>
       <span id="health" class="pill">…</span>
     </div>
@@ -120,8 +122,14 @@ function onFileChosen() {
 }
 
 fetch('/health').then(r => r.json()).then(j => {
-  if (j.openai_configured) healthPill.textContent = '✓ OpenAI متصل';
-  else { healthPill.textContent = '⚠️ لا يوجد مفتاح OpenAI — قوالب فقط'; healthPill.style.color = '#fbbf24'; }
+  const provider = (j.llm_provider || 'none').toLowerCase();
+  const label = provider === 'openai' ? 'OpenAI' : provider === 'gemini' ? 'Gemini' : '';
+  if (label) {
+    healthPill.textContent = `✓ ${label} متصل` + (j.tts_configured ? ' • TTS' : '');
+  } else {
+    healthPill.textContent = '⚠️ لا يوجد مفتاح — قوالب فقط';
+    healthPill.style.color = '#fbbf24';
+  }
 }).catch(() => { healthPill.textContent = '✕ متعذر الوصول'; });
 
 goBtn.addEventListener('click', async () => {
@@ -139,6 +147,8 @@ goBtn.addEventListener('click', async () => {
   const phone = document.getElementById('phone').value;
   if (phone) fd.append('phone', phone);
   fd.append('free_shipping', document.getElementById('free_shipping').checked);
+  fd.append('dub', document.getElementById('dub').checked);
+  fd.append('burn_subs', document.getElementById('burn_subs').checked);
 
   goBtn.disabled = true;
   progress.classList.add('show');
@@ -164,8 +174,18 @@ async function pollJob(id) {
     status.textContent = `الحالة: ${j.status}${j.progress ? ' — ' + j.progress : ''}`;
     if (j.status === 'done') {
       status.innerHTML = `<span class="ok">✓ تم! </span>`;
+      const dubBlock = j.dubbed_video ? `
+        <div style="margin-bottom:12px">
+          <div style="margin-bottom:8px;color:#a78bfa;font-weight:700">🎙️ الفيديو المدبلج بالدارجة</div>
+          <video controls preload="metadata" style="width:100%;max-height:60vh;border-radius:12px;background:#000" src="${j.dubbed_video}"></video>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <a class="pill" href="${j.dubbed_video}" download>⬇️ تحميل MP4</a>
+            <a class="pill" href="${j.dubbed_srt}" download>📝 ترجمة SRT</a>
+          </div>
+        </div>` : '';
       result.innerHTML = `
         <div class="card">
+          ${dubBlock}
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
             <a class="pill" href="${j.report_html}" target="_blank">📄 تقرير HTML</a>
             <a class="pill" href="${j.report_md}" target="_blank">📝 Markdown</a>
