@@ -23,7 +23,7 @@ def _scene(i: int, role: SceneRole) -> AnalyzedScene:
 
 
 def test_fallback_pool_without_llm():
-    settings = Settings(openai_api_key=None)
+    settings = Settings()
     llm = LLMClient(settings)
     assert not llm.enabled
 

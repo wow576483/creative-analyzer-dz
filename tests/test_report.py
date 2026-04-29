@@ -18,7 +18,7 @@ from analyzer.report import render_html, render_markdown, write_outputs
 
 
 def _make_result() -> AnalysisResult:
-    settings = Settings(openai_api_key=None)
+    settings = Settings()
     llm = LLMClient(settings)
     scenes = [
         AnalyzedScene(

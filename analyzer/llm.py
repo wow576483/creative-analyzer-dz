@@ -1,20 +1,49 @@
-"""Thin OpenAI wrapper used by the vision and adaptation steps.
+"""Thin LLM wrapper used by the vision and adaptation steps.
+
+Supports two providers behind the same interface:
+
+- **OpenAI** (``OPENAI_API_KEY``) — default model ``gpt-4o-mini``.
+- **Google Gemini** (``GEMINI_API_KEY``) via Google's
+  `OpenAI-compatible endpoint <https://ai.google.dev/gemini-api/docs/openai>`_,
+  default model ``gemini-2.5-flash-lite``.
 
 The pipeline is built so that everything still works (with a deterministic
-template-based fallback) when ``OPENAI_API_KEY`` is missing — but quality
-improves significantly when an API key is set.
+template-based fallback) when no key is set — but quality improves
+significantly when one is.
+
+The wrapper also implements:
+
+- Automatic keyframe down-scaling before sending to the LLM (saves tokens
+  and avoids free-tier rate limits on Gemini).
+- Exponential backoff with retry on 429 / RESOURCE_EXHAUSTED responses.
 """
 
 from __future__ import annotations
 
 import base64
+import io
 import json
 import logging
+import random
+import time
 from pathlib import Path
+
+from PIL import Image
 
 from .config import Settings
 
 log = logging.getLogger(__name__)
+
+# Down-scale keyframes to this longest-edge before base64-encoding
+_VISION_MAX_SIDE = 768
+_VISION_QUALITY = 80
+_MAX_RETRIES = 4
+_BASE_BACKOFF = 2.0
+
+
+def _is_rate_limited(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(t in msg for t in ("rate limit", "429", "resource_exhausted", "quota"))
 
 
 class LLMClient:
@@ -26,7 +55,10 @@ class LLMClient:
         if settings.has_llm:
             from openai import OpenAI
 
-            self._client = OpenAI(api_key=settings.openai_api_key)
+            kwargs: dict = {"api_key": settings.llm_api_key}
+            if settings.llm_base_url:
+                kwargs["base_url"] = settings.llm_base_url
+            self._client = OpenAI(**kwargs)
 
     @property
     def enabled(self) -> bool:
@@ -39,7 +71,10 @@ class LLMClient:
         """Return a dict {description, on_screen_text, subjects}. Falls back to {} if no LLM."""
         if not self._client:
             return {}
-        try:
+
+        client = self._client
+
+        def _do_call() -> dict:
             data_url = _to_data_url(image_path)
             prompt = (
                 "أنت تحلّل لقطة من فيديو إعلان لمنتج. صف باختصار:\n"
@@ -50,8 +85,8 @@ class LLMClient:
                 "أعد الجواب JSON فقط بهذا الشكل:\n"
                 '{"description": "...", "on_screen_text": "...", "subjects": ["..."]}'
             )
-            resp = self._client.chat.completions.create(
-                model=self.settings.openai_model,
+            resp = client.chat.completions.create(
+                model=self.settings.llm_model,
                 messages=[
                     {
                         "role": "user",
@@ -67,9 +102,8 @@ class LLMClient:
             )
             content = resp.choices[0].message.content or "{}"
             return json.loads(content)
-        except Exception as exc:  # pragma: no cover - network-dependent
-            log.warning("vision_describe failed: %s", exc)
-            return {}
+
+        return _retry(_do_call, label="vision_describe")
 
     # ------------------------------------------------------------------
     # JSON chat: generic structured generation
@@ -77,9 +111,12 @@ class LLMClient:
     def json_chat(self, system: str, user: str, max_tokens: int = 1500) -> dict:
         if not self._client:
             return {}
-        try:
-            resp = self._client.chat.completions.create(
-                model=self.settings.openai_model,
+
+        client = self._client
+
+        def _do_call() -> dict:
+            resp = client.chat.completions.create(
+                model=self.settings.llm_model,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
@@ -90,14 +127,42 @@ class LLMClient:
             )
             content = resp.choices[0].message.content or "{}"
             return json.loads(content)
+
+        return _retry(_do_call, label="json_chat")
+
+
+def _retry(fn, label: str) -> dict:
+    """Run ``fn`` with exponential backoff on rate-limit / quota errors."""
+    last: Exception | None = None
+    for attempt in range(_MAX_RETRIES):
+        try:
+            return fn()
         except Exception as exc:  # pragma: no cover - network-dependent
-            log.warning("json_chat failed: %s", exc)
-            return {}
+            last = exc
+            if attempt == _MAX_RETRIES - 1 or not _is_rate_limited(exc):
+                log.warning("%s failed: %s", label, exc)
+                return {}
+            sleep_for = _BASE_BACKOFF * (2**attempt) + random.uniform(0, 1.0)
+            log.info("%s rate-limited, retrying in %.1fs (attempt %d)", label, sleep_for, attempt + 1)
+            time.sleep(sleep_for)
+    if last:
+        log.warning("%s gave up after retries: %s", label, last)
+    return {}
 
 
 def _to_data_url(image_path: Path) -> str:
-    raw = image_path.read_bytes()
+    """Down-scale, JPEG-encode, and base64 encode the image for the chat call."""
+    try:
+        with Image.open(image_path) as im:
+            im = im.convert("RGB")
+            im.thumbnail((_VISION_MAX_SIDE, _VISION_MAX_SIDE))
+            buf = io.BytesIO()
+            im.save(buf, format="JPEG", quality=_VISION_QUALITY, optimize=True)
+            raw = buf.getvalue()
+        mime = "image/jpeg"
+    except Exception:  # pragma: no cover
+        raw = image_path.read_bytes()
+        suffix = image_path.suffix.lower().lstrip(".")
+        mime = "image/jpeg" if suffix in {"jpg", "jpeg"} else f"image/{suffix or 'png'}"
     b64 = base64.b64encode(raw).decode("ascii")
-    suffix = image_path.suffix.lower().lstrip(".")
-    mime = "image/jpeg" if suffix in {"jpg", "jpeg"} else f"image/{suffix or 'png'}"
     return f"data:{mime};base64,{b64}"
