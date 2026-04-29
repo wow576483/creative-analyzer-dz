@@ -50,18 +50,34 @@ def _get_job(job_id: str) -> dict | None:
         return _JOBS.get(job_id)
 
 
-def _run_job(job_id: str, video_path: Path, product: ProductInfo, run_dir: Path) -> None:
+def _run_job(
+    job_id: str,
+    video_path: Path,
+    product: ProductInfo,
+    run_dir: Path,
+    dub: bool = False,
+    burn_subs: bool = False,
+) -> None:
     try:
         _set_job(job_id, status="running", progress="detecting scenes…")
-        analyze_video(video_path=video_path, product=product, out_dir=run_dir)
-        _set_job(
-            job_id,
-            status="done",
-            report_html=f"/runs/{run_dir.name}/report.html",
-            report_md=f"/runs/{run_dir.name}/report.md",
-            analysis_json=f"/runs/{run_dir.name}/analysis.json",
-            creatives_csv=f"/runs/{run_dir.name}/creatives.csv",
+        analyze_video(
+            video_path=video_path,
+            product=product,
+            out_dir=run_dir,
+            dub=dub,
+            burn_subs=burn_subs,
         )
+        outputs = {
+            "status": "done",
+            "report_html": f"/runs/{run_dir.name}/report.html",
+            "report_md": f"/runs/{run_dir.name}/report.md",
+            "analysis_json": f"/runs/{run_dir.name}/analysis.json",
+            "creatives_csv": f"/runs/{run_dir.name}/creatives.csv",
+        }
+        if dub and (run_dir / "final_dubbed.mp4").exists():
+            outputs["dubbed_video"] = f"/runs/{run_dir.name}/final_dubbed.mp4"
+            outputs["dubbed_srt"] = f"/runs/{run_dir.name}/final_dubbed.srt"
+        _set_job(job_id, **outputs)
     except Exception as exc:  # pragma: no cover - runtime failure
         log.exception("Job %s failed", job_id)
         _set_job(job_id, status="error", error=str(exc))
@@ -83,7 +99,9 @@ def health() -> dict:
     settings = Settings.from_env()
     return {
         "ok": True,
+        "llm_provider": settings.llm_provider,
         "openai_configured": settings.has_llm,
+        "tts_configured": settings.has_gemini_for_tts,
         "whisper_model": settings.whisper_model,
     }
 
@@ -98,6 +116,8 @@ async def analyze(
     currency: str = Form("DZD"),
     phone: str | None = Form(None),
     free_shipping: bool = Form(True),
+    dub: bool = Form(False),
+    burn_subs: bool = Form(False),
 ) -> JSONResponse:
     """Kick off a new background analysis job."""
     if not video.filename:
@@ -122,7 +142,9 @@ async def analyze(
 
     _set_job(job_id, status="queued")
     threading.Thread(
-        target=_run_job, args=(job_id, upload_path, info, run_dir), daemon=True
+        target=_run_job,
+        args=(job_id, upload_path, info, run_dir, dub, burn_subs),
+        daemon=True,
     ).start()
 
     return JSONResponse({"job_id": job_id, "status": "queued"})

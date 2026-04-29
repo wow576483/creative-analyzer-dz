@@ -21,6 +21,7 @@ dependencies = [
     "pydantic>=2.6",
     "jinja2>=3.1",
     "openai>=1.40",
+    "google-genai>=0.7",
     "scenedetect[opencv]>=0.6.4",
     "faster-whisper>=1.0.3",
     "pillow>=10.0",

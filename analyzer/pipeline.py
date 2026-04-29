@@ -9,6 +9,7 @@ from pathlib import Path
 from .adapt import build_parts_pool
 from .classify import classify_scenes
 from .config import Settings
+from .dub import dub_video
 from .llm import LLMClient
 from .models import AnalysisResult, ProductInfo
 from .permutation import generate_scripts
@@ -28,6 +29,8 @@ def analyze_video(
     n_creatives: int = 8,
     per_role: int = 5,
     strategy: str = "zip_balanced",
+    dub: bool = False,
+    burn_subs: bool = False,
 ) -> AnalysisResult:
     """Run the full pipeline on ``video_path`` and return a complete result."""
     settings = settings or Settings.from_env()
@@ -67,6 +70,22 @@ def analyze_video(
 
     write_outputs(result, out_dir)
     log.info("Wrote outputs to %s", out_dir)
+
+    if dub:
+        try:
+            log.info("[7/7] Dubbing video with Gemini TTS (burn_subs=%s)…", burn_subs)
+            artifacts = dub_video(
+                result=result,
+                source_video=video_path,
+                out_dir=out_dir,
+                settings=settings,
+                burn_subs=burn_subs,
+                product=product,
+            )
+            log.info("Dubbed video → %s (tts_used=%s)", artifacts["video"], artifacts["tts_used"])
+        except Exception as exc:  # noqa: BLE001 - dubbing is best-effort
+            log.warning("Dubbing failed: %s", exc)
+
     return result
 
 

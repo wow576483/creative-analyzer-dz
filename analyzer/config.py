@@ -37,6 +37,11 @@ class Settings:
     scene_threshold: float = 27.0
     min_scene_seconds: float = 1.2
 
+    # TTS (used by the dubbing pipeline)
+    tts_api_key: str | None = None
+    tts_model: str = "gemini-2.5-flash-preview-tts"
+    tts_voice: str = "Kore"
+
     @classmethod
     def from_env(cls) -> Settings:
         openai_key = os.environ.get("OPENAI_API_KEY") or None
@@ -61,6 +66,9 @@ class Settings:
             model = "gpt-4o-mini"
             base_url = None
 
+        # TTS uses Gemini regardless of which provider drives the chat LLM.
+        tts_key = gemini_key
+
         return cls(
             llm_provider=provider,
             llm_api_key=api_key,
@@ -71,8 +79,15 @@ class Settings:
             whisper_compute_type=os.environ.get("WHISPER_COMPUTE_TYPE", "int8"),
             scene_threshold=float(os.environ.get("SCENE_THRESHOLD", "27.0")),
             min_scene_seconds=float(os.environ.get("MIN_SCENE_SECONDS", "1.2")),
+            tts_api_key=tts_key,
+            tts_model=os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
+            tts_voice=os.environ.get("GEMINI_TTS_VOICE", "Kore"),
         )
 
     @property
     def has_llm(self) -> bool:
         return self.llm_provider != "none" and bool(self.llm_api_key)
+
+    @property
+    def has_gemini_for_tts(self) -> bool:
+        return bool(self.tts_api_key)
