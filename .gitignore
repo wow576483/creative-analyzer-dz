@@ -44,3 +44,6 @@ out/
 # Models cache
 ~/.cache/whisper/
 models/
+
+# Production secret injection (only baked into deploy image)
+webapp/_prod_secrets.py

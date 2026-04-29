@@ -1,0 +1,37 @@
+app = "creative-analyzer-dz"
+primary_region = "fra"
+kill_signal = "SIGINT"
+kill_timeout = "30s"
+
+[build]
+
+[env]
+  WHISPER_MODEL = "tiny"
+  SCENE_THRESHOLD = "22"
+  RUNS_DIR = "/data/runs"
+  UPLOADS_DIR = "/data/uploads"
+
+[[mounts]]
+  source = "creative_analyzer_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "20s"
+  method = "GET"
+  path = "/health"
+
+[[vm]]
+  size = "performance-2x"
+  memory = "4gb"
+  cpu_kind = "performance"
+  cpus = 2

@@ -6,6 +6,7 @@ import logging
 import shutil
 from pathlib import Path
 
+from . import ensure_ffmpeg_on_path
 from .adapt import build_parts_pool
 from .classify import classify_scenes
 from .config import Settings
@@ -33,6 +34,7 @@ def analyze_video(
     burn_subs: bool = False,
 ) -> AnalysisResult:
     """Run the full pipeline on ``video_path`` and return a complete result."""
+    ensure_ffmpeg_on_path()
     settings = settings or Settings.from_env()
     out_dir = Path(out_dir)
     if out_dir.exists():

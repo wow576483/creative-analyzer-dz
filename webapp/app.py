@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
+import os
 import shutil
 import threading
 import uuid
 from pathlib import Path
+
+# Best-effort load of a gitignored production secrets file. Used on Fly.io
+# where the auto-generated image has no other way to receive env vars.
+with contextlib.suppress(ImportError):
+    from webapp import _prod_secrets  # type: ignore[unused-ignore]  # noqa: F401
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
@@ -14,14 +21,17 @@ from fastapi.staticfiles import StaticFiles
 
 from analyzer.config import Settings
 from analyzer.models import ProductInfo
-from analyzer.pipeline import analyze_video
 
 log = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent
 STATIC = ROOT / "static"
-RUNS_DIR = Path("runs").resolve()
-UPLOADS_DIR = Path("uploads").resolve()
+# Allow overriding via env so the same app works locally (./runs)
+# and on Fly.io with a mounted volume (/data/runs). When /data exists
+# (Fly volume), prefer it transparently.
+_default_root = Path("/data") if Path("/data").is_dir() and os.access("/data", os.W_OK) else Path()
+RUNS_DIR = Path(os.environ.get("RUNS_DIR", str(_default_root / "runs") if _default_root != Path() else "runs")).resolve()
+UPLOADS_DIR = Path(os.environ.get("UPLOADS_DIR", str(_default_root / "uploads") if _default_root != Path() else "uploads")).resolve()
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -60,6 +70,10 @@ def _run_job(
 ) -> None:
     try:
         _set_job(job_id, status="running", progress="detecting scenes…")
+        # Lazy import: keeps app boot fast (faster-whisper + ctranslate2 +
+        # opencv are heavy at import time).
+        from analyzer.pipeline import analyze_video
+
         analyze_video(
             video_path=video_path,
             product=product,
