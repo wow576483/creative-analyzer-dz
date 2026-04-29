@@ -6,7 +6,8 @@
 > اكتب 5 Hooks + 5 Bodies + 5 Proofs + 5 CTAs، ثم ادمجهم → ≈ 625 كرياتيف ممكنة.
 > هذه الأداة تأخذ فيديو إعلان صيني لمنتج معيّن، وتُخرج لك تلقائياً المكوّنات
 > الأربعة (Hook / Body / Proof / CTA) لكل مشهد، ثم تُولّد عشرات السكريبتات
-> الجاهزة بالدارجة الجزائرية باستخدام GPT-4o-mini.
+> الجاهزة بالدارجة الجزائرية باستخدام **GPT-4o-mini** (OpenAI) أو
+> **Gemini 2.5 Flash Lite** (Google) — تختار أيّهما حسب المفتاح المتوفّر.
 
 ---
 
@@ -16,7 +17,7 @@
 
 1. **تقطيع المشاهد** (PySceneDetect) مع keyframe لكل مشهد.
 2. **تفريغ صوتي** لكل مشهد ([faster-whisper] متعدد اللغات).
-3. **وصف بصري** لكل مشهد (GPT-4o-mini Vision: من في الكادر، ما المنتج، نص على الشاشة، مشاعر…).
+3. **وصف بصري** لكل مشهد (Vision: من في الكادر، ما المنتج، نص على الشاشة، مشاعر…).
 4. **تصنيف الدور** لكل مشهد: `Hook` / `Body` / `Proof` / `CTA` / `Transition`.
 5. **تكييف جزائري** لكل عنصر بـ 3 بدائل بالدارجة.
 6. **محرّك Permutation** يدمج Hook×Body×Proof×CTA ويُولّد 5–10 سكريبتات كاملة جاهزة للتصوير.
@@ -36,8 +37,12 @@ source .venv/bin/activate
 # تثبيت الأداة
 pip install -e ".[dev]"
 
-# مفتاح OpenAI (مطلوب للجزء الذكي)
-export OPENAI_API_KEY="sk-..."
+# مفتاح ذكاء اصطناعي (اختر واحداً) ⬇️
+export OPENAI_API_KEY="sk-..."      # OpenAI GPT-4o-mini (افتراضي)
+# أو
+export GEMINI_API_KEY="AIza..."     # Google Gemini 2.5 Flash Lite
+
+# بدون مفتاح، تعمل الأداة بقوالب جاهزة فقط (بدون توليد ذكي).
 ```
 
 ---
@@ -144,11 +149,15 @@ mypy analyzer
 
 | متغيّر بيئة | الافتراضي | الوصف |
 |---|---|---|
-| `OPENAI_API_KEY` | — | مطلوب للذكاء (vision + adaptation) |
-| `OPENAI_MODEL` | `gpt-4o-mini` | الموديل المستخدم |
+| `OPENAI_API_KEY` | — | مفتاح OpenAI (له الأولوية إذا تواجد) |
+| `OPENAI_MODEL` | `gpt-4o-mini` | موديل OpenAI |
+| `GEMINI_API_KEY` | — | مفتاح Google Gemini (يُستعمل تلقائياً لو ما كاش OpenAI) |
+| `GEMINI_MODEL` | `gemini-2.5-flash-lite` | موديل Gemini |
 | `WHISPER_MODEL` | `small` | حجم Whisper (`tiny`/`base`/`small`/`medium`) |
 | `WHISPER_DEVICE` | `cpu` | `cpu` أو `cuda` |
 | `SCENE_THRESHOLD` | `27.0` | عتبة كشف المشاهد |
+
+الأداة تعمل بدون أي مفتاح أيضاً (تستخدم قوالب archetypes الجزائرية المحفوظة في `algeria_kb.py`).
 
 ---
 
