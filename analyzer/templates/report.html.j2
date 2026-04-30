@@ -147,10 +147,11 @@
     <div class="card">
       <h2>سكريبتات الكرياتيف</h2>
       {% for c in result.creatives %}
-      {% set rank = None %}
-      {% for r in result.rankings %}{% if r.ad_index == loop.index0 %}{% set rank = r %}{% endif %}{% endfor %}
+      {% set outer_idx = loop.index0 %}
+      {% set ns = namespace(rank=None) %}
+      {% for r in result.rankings %}{% if r.ad_index == outer_idx %}{% set ns.rank = r %}{% endif %}{% endfor %}
       <div class="creative">
-        <h3>{{ c.title }} <span class="badge">{{ c.angle }}</span> <span class="badge">~{{ "%.0f"|format(c.estimated_duration_seconds) }}s</span>{% if rank %} <span class="badge">🏆 {{ "%.0f"|format(rank.score) }}/100</span>{% endif %}</h3>
+        <h3>{{ c.title }} <span class="badge">{{ c.angle }}</span> <span class="badge">~{{ "%.0f"|format(c.estimated_duration_seconds) }}s</span>{% if ns.rank %} <span class="badge">🏆 {{ "%.0f"|format(ns.rank.score) }}/100</span>{% endif %}</h3>
         <table>
           <tbody>
             <tr><th>🪝 Hook</th><td>{{ c.hook.text_darija }}<br><code>{{ c.hook.on_screen_text }}</code><div class="muted">{{ c.hook.visual_direction }}</div></td></tr>
