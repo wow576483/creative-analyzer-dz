@@ -58,7 +58,7 @@ SCENE_CLASSIFICATION_SYSTEM = (
 SCENE_CLASSIFICATION_USER = (
     "Scenes (JSON list):\n{scenes}\n\n"
     "Return JSON ONLY with this schema:\n"
-    "{{\"scenes\":[{{\"index\":0,\"role\":\"hook\",\"confidence\":0.8,\"reason\":\"...\"}}]}}"
+    "{{\"scenes\":[{{\"index\":0,\"role\":\"hook\",\"confidence\":85,\"reason\":\"...\"}}]}}"
 )
 
 
