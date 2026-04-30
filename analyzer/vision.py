@@ -25,10 +25,19 @@ def analyze_scene_vision(
     else:
         subjects = [str(s).strip() for s in subjects_raw if str(s).strip()]
 
+    # Support both the new 7-stage prompt (visual_description) and the legacy
+    # (description) field so existing tests keep passing.
+    description = str(
+        raw.get("visual_description") or raw.get("description") or ""
+    ).strip()
+
     return SceneVision(
-        description=str(raw.get("description") or "").strip(),
+        description=description,
         on_screen_text=str(raw.get("on_screen_text") or "").strip(),
         detected_subjects=subjects,
+        product_action=str(raw.get("product_action") or "").strip(),
+        emotion=str(raw.get("emotion") or "").strip(),
+        marketing_intent=str(raw.get("marketing_intent") or "").strip(),
     )
 
 

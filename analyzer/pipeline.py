@@ -11,9 +11,12 @@ from .adapt import build_parts_pool
 from .classify import classify_scenes
 from .config import Settings
 from .dub import dub_video
+from .edit_plan import generate_edit_plans_for_top
+from .hook_gen import generate_standalone_hooks
 from .llm import LLMClient
 from .models import AnalysisResult, ProductInfo
 from .permutation import generate_scripts
+from .ranker import rank_scripts
 from .report import write_outputs
 from .scenes import detect_scenes, extract_scene_assets
 from .transcribe import transcribe_all
@@ -58,9 +61,18 @@ def analyze_video(
     log.info("[5/6] Classifying scene roles…")
     scenes = classify_scenes(slices, transcripts, visions, llm)
 
-    log.info("[6/6] Adapting to Algerian darija + permutation…")
+    log.info("[6/9] Adapting to Algerian darija + permutation…")
     pool = build_parts_pool(scenes, product, llm, per_role=per_role)
     creatives = generate_scripts(pool, product, n=n_creatives, strategy=strategy)
+
+    log.info("[7/9] Generating standalone hooks (Prompt 4)…")
+    standalone_hooks = generate_standalone_hooks(product, llm, count=5)
+
+    log.info("[8/9] Ranking scripts (Prompt 6)…")
+    rankings = rank_scripts(creatives, llm)
+
+    log.info("[9/9] Generating edit plans for top 3 scripts (Prompt 7)…")
+    edit_plans = generate_edit_plans_for_top(creatives, rankings, product, llm, top_n=3)
 
     result = AnalysisResult(
         product=product,
@@ -68,6 +80,9 @@ def analyze_video(
         scenes=scenes,
         creatives=creatives,
         parts_pool={role.value: parts for role, parts in pool.items()},
+        rankings=rankings,
+        edit_plans=edit_plans,
+        standalone_hooks=standalone_hooks,
     )
 
     write_outputs(result, out_dir)

@@ -189,8 +189,9 @@ async function pollJob(id) {
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
             <a class="pill" href="${j.report_html}" target="_blank">📄 تقرير HTML</a>
             <a class="pill" href="${j.report_md}" target="_blank">📝 Markdown</a>
-            <a class="pill" href="${j.creatives_csv}" target="_blank">📊 CSV</a>
+            <a class="pill" href="${j.creatives_csv}" target="_blank">📊 CSV (مع ranking)</a>
             <a class="pill" href="${j.analysis_json}" target="_blank">🧬 JSON</a>
+            ${j.edit_plans_json ? `<a class="pill" href="${j.edit_plans_json}" target="_blank">🎬 Edit Plan</a>` : ''}
           </div>
           <iframe src="${j.report_html}"></iframe>
         </div>`;

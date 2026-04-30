@@ -75,30 +75,25 @@ class LLMClient:
         client = self._client
 
         def _do_call() -> dict:
+            from .prompts import VIDEO_ANALYSIS_SYSTEM, VIDEO_ANALYSIS_USER
+
             data_url = _to_data_url(image_path)
-            prompt = (
-                "أنت تحلّل لقطة من فيديو إعلان لمنتج. صف باختصار:\n"
-                "1) ما الذي يحدث في اللقطة (شخص، منتج، فعل).\n"
-                "2) أي نص يظهر على الشاشة (انسخه كما هو إن أمكن).\n"
-                "3) قائمة المواضيع/العناصر البارزة (subjects).\n"
-                f"تلميح صوتي (نص ما يقال): {transcript_hint or '—'}\n\n"
-                "أعد الجواب JSON فقط بهذا الشكل:\n"
-                '{"description": "...", "on_screen_text": "...", "subjects": ["..."]}'
-            )
+            user_text = VIDEO_ANALYSIS_USER.format(transcript=transcript_hint or "—")
             resp = client.chat.completions.create(
                 model=self.settings.llm_model,
                 messages=[
+                    {"role": "system", "content": VIDEO_ANALYSIS_SYSTEM},
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": prompt},
+                            {"type": "text", "text": user_text},
                             {"type": "image_url", "image_url": {"url": data_url}},
                         ],
-                    }
+                    },
                 ],
                 response_format={"type": "json_object"},
                 temperature=0.2,
-                max_tokens=400,
+                max_tokens=500,
             )
             content = resp.choices[0].message.content or "{}"
             return json.loads(content)

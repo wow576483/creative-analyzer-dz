@@ -18,7 +18,6 @@ from collections.abc import Iterable
 from .algeria_kb import (
     BODY_ANGLES,
     CTA_PATTERNS,
-    DARIJA_STYLE_GUIDE,
     HOOK_ARCHETYPES,
     PATTERNS_BY_ROLE,
     PROOF_PATTERNS,
@@ -26,6 +25,11 @@ from .algeria_kb import (
 )
 from .llm import LLMClient
 from .models import AnalyzedScene, CreativePart, ProductInfo, SceneRole
+from .prompts import (
+    ALGERIA_ADAPTATION_SYSTEM,
+    ALGERIA_ADAPTATION_USER,
+    ROLE_GOALS,
+)
 
 log = logging.getLogger(__name__)
 
@@ -123,26 +127,6 @@ def _template_pool(
 # LLM path
 # ---------------------------------------------------------------------------
 
-_ROLE_GOAL = {
-    SceneRole.HOOK: (
-        "اكتب Hook قصير جداً (سطر واحد، يبدأ بإيقاف السكرول في 2-3 ثوان) "
-        "بالدارجة الجزائرية يستهدف جمهور فيس/تيك توك."
-    ),
-    SceneRole.BODY: (
-        "اكتب Body (3-4 جمل قصيرة) يشرح كيف يحل المنتج المشكلة، "
-        "بالدارجة الجزائرية وبأسلوب طبيعي."
-    ),
-    SceneRole.PROOF: (
-        "اكتب Proof قصير: شهادة UGC / قبل-بعد / ضمان / أرقام، "
-        "بالدارجة الجزائرية، يبني الثقة."
-    ),
-    SceneRole.CTA: (
-        "اكتب CTA قصير وحاسم بالدارجة الجزائرية: اذكر COD، التوصيل لكل ولايات الوطن، "
-        "السعر، وأي رقم/واتساب إن وُجد."
-    ),
-}
-
-
 def _llm_pool(
     role: SceneRole,
     ctx: AdaptationContext,
@@ -159,24 +143,26 @@ def _llm_pool(
             "transcript": s.transcript.text,
             "visual": s.vision.description,
             "on_screen_text": s.vision.on_screen_text,
+            "emotion": s.vision.emotion,
+            "marketing_intent": s.vision.marketing_intent,
         }
         for s in scenes
     ]
 
-    system = DARIJA_STYLE_GUIDE
-    user = (
-        f"المنتج وقواعد السوق:\n{ctx.as_prompt_block()}\n\n"
-        f"الدور المطلوب: {role.value}\n"
-        f"التعليمات: {_ROLE_GOAL[role]}\n\n"
-        f"المشاهد المرجعية المصنفة كـ {role.value} في الفيديو الصيني الأصلي:\n"
-        f"{json.dumps(scene_payload, ensure_ascii=False)}\n\n"
-        f"اقترح {count} بدائل {role.value} مختلفة (زوايا/أساليب مختلفة). "
-        "أعد JSON فقط بهذا الشكل:\n"
-        '{"variants":[{"text_darija":"...","on_screen_text":"...","visual_direction":"...","duration_seconds":3.0}]}'
+    system = ALGERIA_ADAPTATION_SYSTEM
+    user = ALGERIA_ADAPTATION_USER.format(
+        product_context=ctx.as_prompt_block(),
+        role=role.value,
+        role_goal=ROLE_GOALS.get(role.value, ""),
+        scenes=json.dumps(scene_payload, ensure_ascii=False),
+        count=count,
     )
 
     raw = llm.json_chat(system, user, max_tokens=1500)
-    variants = raw.get("variants", []) if isinstance(raw, dict) else []
+    # Support both the new prompt ("variations") and the legacy ("variants") shape.
+    variants: list = []
+    if isinstance(raw, dict):
+        variants = raw.get("variations") or raw.get("variants") or []
     parts: list[CreativePart] = []
     for v in variants[:count]:
         if not isinstance(v, dict):

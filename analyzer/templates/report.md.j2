@@ -35,6 +35,39 @@
 
 ---
 
+{% if result.standalone_hooks %}
+## 🔥 Hooks قوية (Standalone — Prompt 4)
+
+{% for h in result.standalone_hooks %}- **#{{ loop.index }}** ({{ h.angle or "—" }}) — {{ h.text }}
+{% endfor %}
+---
+{% endif %}
+
+{% if result.rankings %}
+## 🏆 ترتيب السكريبتات (Prompt 6)
+
+| # | السكريبت | Total | Hook | Clarity | CTA | Market | السبب |
+|---|----------|------:|-----:|--------:|----:|-------:|-------|
+{% for r in result.rankings %}{% set sc = result.creatives[r.ad_index] if r.ad_index < result.creatives|length else None %}| {{ loop.index }} | {{ sc.title if sc else '#'+r.ad_index|string }} | **{{ "%.0f"|format(r.score) }}** | {{ "%.0f"|format(r.hook_score) }} | {{ "%.0f"|format(r.clarity_score) }} | {{ "%.0f"|format(r.cta_score) }} | {{ "%.0f"|format(r.market_fit_score) }} | {{ r.reason }} |
+{% endfor %}
+---
+{% endif %}
+
+{% if result.edit_plans %}
+## 🎬 خطط التحرير للـ Top {{ result.edit_plans|length }} (Prompt 7)
+
+{% for ep in result.edit_plans %}
+### {{ ep.script_title or 'Script #'+ep.script_index|string }}
+
+| From → To | Role | Overlay | Transition | Music | B-roll |
+|-----------|:----:|---------|:----------:|:-----:|--------|
+{% for s in ep.scenes %}| {{ "%.1f"|format(s.start_time) }}s → {{ "%.1f"|format(s.end_time) }}s | **{{ s.role.value }}** | {{ s.text_overlay }} | `{{ s.transition }}` | `{{ s.music_mood }}` | {{ s.b_roll_hint }} |
+{% endfor %}
+
+{% endfor %}
+---
+{% endif %}
+
 ## 3) سكريبتات كرياتيف جاهزة ({{ result.creatives|length }})
 
 {% for c in result.creatives %}

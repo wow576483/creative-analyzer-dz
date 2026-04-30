@@ -88,6 +88,8 @@ def _run_job(
             "analysis_json": f"/runs/{run_dir.name}/analysis.json",
             "creatives_csv": f"/runs/{run_dir.name}/creatives.csv",
         }
+        if (run_dir / "edit_plans.json").exists():
+            outputs["edit_plans_json"] = f"/runs/{run_dir.name}/edit_plans.json"
         if dub and (run_dir / "final_dubbed.mp4").exists():
             outputs["dubbed_video"] = f"/runs/{run_dir.name}/final_dubbed.mp4"
             outputs["dubbed_srt"] = f"/runs/{run_dir.name}/final_dubbed.srt"
