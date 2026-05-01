@@ -101,7 +101,7 @@
         <thead><tr><th>#</th><th>السكريبت</th><th>Total</th><th>Hook</th><th>Clarity</th><th>CTA</th><th>Market</th><th>السبب</th></tr></thead>
         <tbody>
         {% for r in result.rankings %}
-          {% set sc = result.creatives[r.ad_index] if r.ad_index < result.creatives|length else None %}
+          {% set sc = result.creatives[r.ad_index] if 0 <= r.ad_index < result.creatives|length else None %}
           <tr>
             <td>{{ loop.index }}</td>
             <td>{{ sc.title if sc else '#'+r.ad_index|string }}</td>

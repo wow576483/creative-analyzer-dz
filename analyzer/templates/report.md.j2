@@ -48,7 +48,7 @@
 
 | # | السكريبت | Total | Hook | Clarity | CTA | Market | السبب |
 |---|----------|------:|-----:|--------:|----:|-------:|-------|
-{% for r in result.rankings %}{% set sc = result.creatives[r.ad_index] if r.ad_index < result.creatives|length else None %}| {{ loop.index }} | {{ sc.title if sc else '#'+r.ad_index|string }} | **{{ "%.0f"|format(r.score) }}** | {{ "%.0f"|format(r.hook_score) }} | {{ "%.0f"|format(r.clarity_score) }} | {{ "%.0f"|format(r.cta_score) }} | {{ "%.0f"|format(r.market_fit_score) }} | {{ r.reason }} |
+{% for r in result.rankings %}{% set sc = result.creatives[r.ad_index] if 0 <= r.ad_index < result.creatives|length else None %}| {{ loop.index }} | {{ sc.title if sc else '#'+r.ad_index|string }} | **{{ "%.0f"|format(r.score) }}** | {{ "%.0f"|format(r.hook_score) }} | {{ "%.0f"|format(r.clarity_score) }} | {{ "%.0f"|format(r.cta_score) }} | {{ "%.0f"|format(r.market_fit_score) }} | {{ r.reason }} |
 {% endfor %}
 ---
 {% endif %}
