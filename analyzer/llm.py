@@ -67,7 +67,12 @@ class LLMClient:
     # ------------------------------------------------------------------
     # Vision: describe a single keyframe
     # ------------------------------------------------------------------
-    def vision_describe(self, image_path: Path, transcript_hint: str = "") -> dict:
+    def vision_describe(
+        self,
+        image_path: Path,
+        transcript_hint: str = "",
+        product_context: str = "",
+    ) -> dict:
         """Return a dict {description, on_screen_text, subjects}. Falls back to {} if no LLM."""
         if not self._client:
             return {}
@@ -78,7 +83,10 @@ class LLMClient:
             from .prompts import VIDEO_ANALYSIS_SYSTEM, VIDEO_ANALYSIS_USER
 
             data_url = _to_data_url(image_path)
-            user_text = VIDEO_ANALYSIS_USER.format(transcript=transcript_hint or "—")
+            user_text = VIDEO_ANALYSIS_USER.format(
+                transcript=transcript_hint or "—",
+                product_context=product_context or "(not provided)",
+            )
             resp = client.chat.completions.create(
                 model=self.settings.llm_model,
                 messages=[

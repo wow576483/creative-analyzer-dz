@@ -5,17 +5,35 @@ from __future__ import annotations
 from pathlib import Path
 
 from .llm import LLMClient
-from .models import SceneSlice, SceneTranscript, SceneVision
+from .models import ProductInfo, SceneSlice, SceneTranscript, SceneVision
+
+
+def _product_context(product: ProductInfo | None) -> str:
+    if product is None:
+        return ""
+    parts = [f"Name: {product.name}"]
+    if product.description:
+        parts.append(f"Description: {product.description}")
+    if product.price_label:
+        parts.append(f"Price: {product.price_label}")
+    return "\n".join(parts)
 
 
 def analyze_scene_vision(
-    slice_: SceneSlice, transcript: SceneTranscript, llm: LLMClient
+    slice_: SceneSlice,
+    transcript: SceneTranscript,
+    llm: LLMClient,
+    product: ProductInfo | None = None,
 ) -> SceneVision:
     """Describe the keyframe of a scene. Returns an empty SceneVision when no LLM."""
     if not llm.enabled:
         return SceneVision(description="", on_screen_text="", detected_subjects=[])
 
-    raw = llm.vision_describe(Path(slice_.keyframe_path), transcript.text)
+    raw = llm.vision_describe(
+        Path(slice_.keyframe_path),
+        transcript.text,
+        product_context=_product_context(product),
+    )
     if not raw:
         return SceneVision()
 
@@ -42,6 +60,12 @@ def analyze_scene_vision(
 
 
 def analyze_all(
-    slices: list[SceneSlice], transcripts: list[SceneTranscript], llm: LLMClient
+    slices: list[SceneSlice],
+    transcripts: list[SceneTranscript],
+    llm: LLMClient,
+    product: ProductInfo | None = None,
 ) -> list[SceneVision]:
-    return [analyze_scene_vision(s, t, llm) for s, t in zip(slices, transcripts, strict=True)]
+    return [
+        analyze_scene_vision(s, t, llm, product=product)
+        for s, t in zip(slices, transcripts, strict=True)
+    ]

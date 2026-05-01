@@ -21,17 +21,25 @@ from __future__ import annotations
 # ---------------------------------------------------------------------------
 VIDEO_ANALYSIS_SYSTEM = (
     "You are an expert advertising analyst specialized in e-commerce video ads. "
-    "Your task is to analyze a short video clip and describe it in detail."
+    "Analyze the scene through the lens of the product the merchant is selling — "
+    "the merchant's product description is the GROUND TRUTH for what the product is. "
+    "Never invent a different product category from what the merchant declared; "
+    "if the keyframe is ambiguous, anchor your interpretation on the merchant's product."
 )
 
 VIDEO_ANALYSIS_USER = (
+    "MERCHANT'S PRODUCT (ground truth — never contradict):\n{product_context}\n\n"
     "For the given scene, return:\n"
-    "1) What is happening visually (actions, people, product usage)\n"
-    "2) What is the product doing\n"
+    "1) What is happening visually (actions, people, product usage) — "
+    "describe how the merchant's product appears or is used.\n"
+    "2) What is the product doing (specific to the merchant's product, NOT a similar item).\n"
     "3) Emotional tone (exciting, surprising, boring, etc.)\n"
     "4) Any text on screen (copy verbatim if possible)\n"
-    "5) What is the marketing intent\n\n"
+    "5) Marketing intent — how this scene sells the merchant's product.\n\n"
     "Audio transcript hint: {transcript}\n\n"
+    "IMPORTANT: If the keyframe shows something that looks similar to a DIFFERENT product "
+    "(e.g. you see a brush but the merchant sells a smartwatch), trust the merchant — "
+    "describe the visible object as an accessory or scene element, NOT as the main product.\n\n"
     "Return JSON ONLY:\n"
     "{{\"visual_description\":\"\",\"product_action\":\"\",\"emotion\":\"\","
     "\"on_screen_text\":\"\",\"marketing_intent\":\"\",\"subjects\":[]}}"

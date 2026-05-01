@@ -75,7 +75,7 @@ def analyze_video(
     llm = LLMClient(settings)
     on_progress(40, "تحليل بصري (Vision LLM)…")
     log.info("[4/9] Visual analysis (LLM=%s)…", llm.enabled)
-    visions = analyze_all(slices, transcripts, llm)
+    visions = analyze_all(slices, transcripts, llm, product=product)
 
     on_progress(55, "تصنيف المشاهد…")
     log.info("[5/9] Classifying scene roles…")
