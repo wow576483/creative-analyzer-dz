@@ -37,13 +37,39 @@ log = logging.getLogger(__name__)
 # Down-scale keyframes to this longest-edge before base64-encoding
 _VISION_MAX_SIDE = 768
 _VISION_QUALITY = 80
-_MAX_RETRIES = 4
-_BASE_BACKOFF = 2.0
+_MAX_RETRIES = 3
+_BASE_BACKOFF = 1.5
+# Hard wall-clock timeout for any single LLM HTTP call. Without this the
+# default openai client uses no timeout, so a stuck Gemini connection can
+# hang the pipeline indefinitely on a single keyframe.
+_REQUEST_TIMEOUT_SECONDS = 30.0
 
 
 def _is_rate_limited(exc: Exception) -> bool:
     msg = str(exc).lower()
     return any(t in msg for t in ("rate limit", "429", "resource_exhausted", "quota"))
+
+
+def _is_daily_quota_exhausted(exc: Exception) -> bool:
+    """Detect a per-day quota exhaustion (vs. a transient per-minute throttle).
+
+    On daily-cap errors, retrying within the same session is hopeless: the
+    cap only resets at the next UTC midnight. We bail out immediately so
+    the pipeline can fall back to templates instead of stalling for
+    minutes per scene with exponential backoff.
+    """
+    msg = str(exc).lower()
+    return any(
+        t in msg
+        for t in (
+            "per day",
+            "per_day",
+            "perday",
+            "daily",
+            "requests per day",
+            "generate_requests_per_day",
+        )
+    )
 
 
 class LLMClient:
@@ -55,7 +81,10 @@ class LLMClient:
         if settings.has_llm:
             from openai import OpenAI
 
-            kwargs: dict = {"api_key": settings.llm_api_key}
+            kwargs: dict = {
+                "api_key": settings.llm_api_key,
+                "timeout": _REQUEST_TIMEOUT_SECONDS,
+            }
             if settings.llm_base_url:
                 kwargs["base_url"] = settings.llm_base_url
             self._client = OpenAI(**kwargs)
@@ -67,7 +96,12 @@ class LLMClient:
     # ------------------------------------------------------------------
     # Vision: describe a single keyframe
     # ------------------------------------------------------------------
-    def vision_describe(self, image_path: Path, transcript_hint: str = "") -> dict:
+    def vision_describe(
+        self,
+        image_path: Path,
+        transcript_hint: str = "",
+        product_context: str = "",
+    ) -> dict:
         """Return a dict {description, on_screen_text, subjects}. Falls back to {} if no LLM."""
         if not self._client:
             return {}
@@ -75,30 +109,28 @@ class LLMClient:
         client = self._client
 
         def _do_call() -> dict:
+            from .prompts import VIDEO_ANALYSIS_SYSTEM, VIDEO_ANALYSIS_USER
+
             data_url = _to_data_url(image_path)
-            prompt = (
-                "أنت تحلّل لقطة من فيديو إعلان لمنتج. صف باختصار:\n"
-                "1) ما الذي يحدث في اللقطة (شخص، منتج، فعل).\n"
-                "2) أي نص يظهر على الشاشة (انسخه كما هو إن أمكن).\n"
-                "3) قائمة المواضيع/العناصر البارزة (subjects).\n"
-                f"تلميح صوتي (نص ما يقال): {transcript_hint or '—'}\n\n"
-                "أعد الجواب JSON فقط بهذا الشكل:\n"
-                '{"description": "...", "on_screen_text": "...", "subjects": ["..."]}'
+            user_text = VIDEO_ANALYSIS_USER.format(
+                transcript=transcript_hint or "—",
+                product_context=product_context or "(not provided)",
             )
             resp = client.chat.completions.create(
                 model=self.settings.llm_model,
                 messages=[
+                    {"role": "system", "content": VIDEO_ANALYSIS_SYSTEM},
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": prompt},
+                            {"type": "text", "text": user_text},
                             {"type": "image_url", "image_url": {"url": data_url}},
                         ],
-                    }
+                    },
                 ],
                 response_format={"type": "json_object"},
                 temperature=0.2,
-                max_tokens=400,
+                max_tokens=500,
             )
             content = resp.choices[0].message.content or "{}"
             return json.loads(content)
@@ -132,13 +164,21 @@ class LLMClient:
 
 
 def _retry(fn, label: str) -> dict:
-    """Run ``fn`` with exponential backoff on rate-limit / quota errors."""
+    """Run ``fn`` with exponential backoff on rate-limit / quota errors.
+
+    Bails out immediately on per-day quota exhaustion (no point retrying
+    until UTC midnight) and on non-rate-limit failures. Per-minute throttles
+    fall through to a short exponential backoff.
+    """
     last: Exception | None = None
     for attempt in range(_MAX_RETRIES):
         try:
             return fn()
         except Exception as exc:  # pragma: no cover - network-dependent
             last = exc
+            if _is_daily_quota_exhausted(exc):
+                log.warning("%s aborted: daily quota exhausted (%s)", label, exc)
+                return {}
             if attempt == _MAX_RETRIES - 1 or not _is_rate_limited(exc):
                 log.warning("%s failed: %s", label, exc)
                 return {}

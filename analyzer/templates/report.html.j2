@@ -76,11 +76,82 @@
       {% endfor %}
     </div>
 
+    {% if result.standalone_hooks %}
+    <div class="card">
+      <h2>🔥 Hooks قوية (Standalone)</h2>
+      <table>
+        <thead><tr><th>#</th><th>الـ Hook</th><th>الزاوية</th></tr></thead>
+        <tbody>
+        {% for h in result.standalone_hooks %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ h.text }}</td>
+            <td><code>{{ h.angle }}</code></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if result.rankings %}
+    <div class="card">
+      <h2>🏆 ترتيب السكريبتات (AI Ranking /100)</h2>
+      <table>
+        <thead><tr><th>#</th><th>السكريبت</th><th>Total</th><th>Hook</th><th>Clarity</th><th>CTA</th><th>Market</th><th>السبب</th></tr></thead>
+        <tbody>
+        {% for r in result.rankings %}
+          {% set sc = result.creatives[r.ad_index] if 0 <= r.ad_index < result.creatives|length else None %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ sc.title if sc else '#'+r.ad_index|string }}</td>
+            <td><strong>{{ "%.0f"|format(r.score) }}</strong></td>
+            <td>{{ "%.0f"|format(r.hook_score) }}</td>
+            <td>{{ "%.0f"|format(r.clarity_score) }}</td>
+            <td>{{ "%.0f"|format(r.cta_score) }}</td>
+            <td>{{ "%.0f"|format(r.market_fit_score) }}</td>
+            <td class="muted">{{ r.reason }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if result.edit_plans %}
+    <div class="card">
+      <h2>🎬 خطط التحرير (Top {{ result.edit_plans|length }})</h2>
+      {% for ep in result.edit_plans %}
+      <div class="creative">
+        <h3>{{ ep.script_title or 'Script #'+ep.script_index|string }}</h3>
+        <table>
+          <thead><tr><th>From → To</th><th>Role</th><th>Overlay</th><th>Transition</th><th>Music</th><th>B-roll</th></tr></thead>
+          <tbody>
+          {% for s in ep.scenes %}
+            <tr>
+              <td>{{ "%.1f"|format(s.start_time) }}s → {{ "%.1f"|format(s.end_time) }}s</td>
+              <td><span class="pill role-{{ s.role.value }}">{{ s.role.value }}</span></td>
+              <td>{{ s.text_overlay }}</td>
+              <td><code>{{ s.transition }}</code></td>
+              <td><code>{{ s.music_mood }}</code></td>
+              <td class="muted">{{ s.b_roll_hint }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="card">
       <h2>سكريبتات الكرياتيف</h2>
       {% for c in result.creatives %}
+      {% set outer_idx = loop.index0 %}
+      {% set ns = namespace(rank=None) %}
+      {% for r in result.rankings %}{% if r.ad_index == outer_idx %}{% set ns.rank = r %}{% endif %}{% endfor %}
       <div class="creative">
-        <h3>{{ c.title }} <span class="badge">{{ c.angle }}</span> <span class="badge">~{{ "%.0f"|format(c.estimated_duration_seconds) }}s</span></h3>
+        <h3>{{ c.title }} <span class="badge">{{ c.angle }}</span> <span class="badge">~{{ "%.0f"|format(c.estimated_duration_seconds) }}s</span>{% if ns.rank %} <span class="badge">🏆 {{ "%.0f"|format(ns.rank.score) }}/100</span>{% endif %}</h3>
         <table>
           <tbody>
             <tr><th>🪝 Hook</th><td>{{ c.hook.text_darija }}<br><code>{{ c.hook.on_screen_text }}</code><div class="muted">{{ c.hook.visual_direction }}</div></td></tr>

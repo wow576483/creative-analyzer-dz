@@ -12,6 +12,7 @@ crashing — the caller can detect this via :func:`is_silent_wav`.
 from __future__ import annotations
 
 import logging
+import os
 import struct
 import wave
 from pathlib import Path
@@ -25,14 +26,26 @@ TTS_RATE = 24000
 TTS_CHANNELS = 1
 TTS_SAMPLE_WIDTH = 2
 
-# Default voice for darija: warm, mid-pitch, neutral. Tweakable via env later.
-DEFAULT_VOICE = "Kore"
+# Default voice for darija marketing — Achird (Friendly) sounds like a young
+# woman recommending a product to a friend, much more natural than the
+# previous default (Kore = Firm) for ad copy. Override via TTS_VOICE env.
+# Other good picks for upbeat ads: "Laomedeia" (Upbeat), "Sulafat" (Warm),
+# "Aoede" (Breezy), "Leda" (Youthful).
+DEFAULT_VOICE = os.environ.get("TTS_VOICE", "Achird")
 
-# Style prompt prepended to the text to nudge pronunciation toward Algerian
-# darija (the model is multilingual but handles MSA better by default).
+# Style prompt prepended to the text. Concrete persona + delivery direction
+# lifts the perceived naturalness significantly over a generic instruction.
 DARIJA_STYLE = (
-    "Read the following short ad copy in a warm, energetic Algerian-darija "
-    "accent (informal Maghrebi Arabic). Keep an upbeat marketing tone:\n"
+    "You are a young Algerian woman in her late twenties recording a TikTok ad "
+    "for a friend's online shop. Speak in natural conversational Algerian "
+    "Darija (Maghrebi Arabic, NOT formal Fusha) with the relaxed Algiers "
+    "rhythm. Be warm, friendly, and a bit excited — like you genuinely use "
+    "the product and want your friend to try it. Keep the energy upbeat but "
+    "human, with realistic micro-pauses at commas and a short pause at every "
+    "full stop. Pronounce French loanwords (livraison, promo, gratuit) with "
+    "a Maghrebi accent. Do NOT read any punctuation marks aloud, do NOT "
+    "narrate stage directions, do NOT add anything that isn't in the script. "
+    "Read this ad copy:\n"
 )
 
 

@@ -69,10 +69,13 @@ def _run_job(
     burn_subs: bool = False,
 ) -> None:
     try:
-        _set_job(job_id, status="running", progress="detecting scenes…")
+        _set_job(job_id, status="running", progress="بدء التحليل…", percent=0)
         # Lazy import: keeps app boot fast (faster-whisper + ctranslate2 +
         # opencv are heavy at import time).
         from analyzer.pipeline import analyze_video
+
+        def on_progress(percent: int, message: str) -> None:
+            _set_job(job_id, status="running", progress=message, percent=percent)
 
         analyze_video(
             video_path=video_path,
@@ -80,14 +83,19 @@ def _run_job(
             out_dir=run_dir,
             dub=dub,
             burn_subs=burn_subs,
+            progress=on_progress,
         )
         outputs = {
             "status": "done",
+            "percent": 100,
+            "progress": "اكتمل!",
             "report_html": f"/runs/{run_dir.name}/report.html",
             "report_md": f"/runs/{run_dir.name}/report.md",
             "analysis_json": f"/runs/{run_dir.name}/analysis.json",
             "creatives_csv": f"/runs/{run_dir.name}/creatives.csv",
         }
+        if (run_dir / "edit_plans.json").exists():
+            outputs["edit_plans_json"] = f"/runs/{run_dir.name}/edit_plans.json"
         if dub and (run_dir / "final_dubbed.mp4").exists():
             outputs["dubbed_video"] = f"/runs/{run_dir.name}/final_dubbed.mp4"
             outputs["dubbed_srt"] = f"/runs/{run_dir.name}/final_dubbed.srt"

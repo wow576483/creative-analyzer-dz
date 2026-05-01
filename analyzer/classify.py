@@ -117,6 +117,8 @@ def _llm_refine(
     if not llm.enabled:
         return initial
 
+    from .prompts import SCENE_CLASSIFICATION_SYSTEM, SCENE_CLASSIFICATION_USER
+
     payload: list[dict] = []
     for s, t, v, (role, _, _) in zip(slices, transcripts, visions, initial, strict=True):
         payload.append(
@@ -127,23 +129,15 @@ def _llm_refine(
                 "transcript": t.text,
                 "visual_description": v.description,
                 "on_screen_text": v.on_screen_text,
+                "emotion": v.emotion,
+                "marketing_intent": v.marketing_intent,
                 "current_label": role.value,
             }
         )
 
-    system = (
-        "أنت محلّل إعلانات. ستحصل على مشاهد فيديو إعلاني وعليك تصنيف كل مشهد "
-        "إلى أحد الأدوار: hook, body, proof, cta, transition. "
-        "Hook = أول 3-5 ثوان لإيقاف السكرول. "
-        "Body = شرح المنتج وفائدته. "
-        "Proof = شهادات/ضمان/قبل-بعد/أرقام. "
-        "CTA = دعوة للشراء/طلب/تواصل. "
-        "Transition = مشاهد قصيرة جداً بدون قيمة محتوى."
-    )
-    user = (
-        "أعد JSON فقط بهذا الشكل: "
-        '{"scenes":[{"index":0,"role":"hook","confidence":0.8,"reason":"..."}]}\n\n'
-        f"المشاهد:\n{json.dumps(payload, ensure_ascii=False)}"
+    system = SCENE_CLASSIFICATION_SYSTEM
+    user = SCENE_CLASSIFICATION_USER.format(
+        scenes=json.dumps(payload, ensure_ascii=False)
     )
 
     raw = llm.json_chat(system, user, max_tokens=1200)
@@ -161,6 +155,9 @@ def _llm_refine(
         except ValueError:
             role = default[0]
         confidence = float(item.get("confidence", default[1]) or default[1])
+        if confidence > 1.0:
+            # New prompt returns 0-100; normalize.
+            confidence = min(1.0, confidence / 100.0)
         reason = str(item.get("reason", default[2])).strip() or default[2]
         out[i] = (role, confidence, reason)
 

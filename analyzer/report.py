@@ -72,10 +72,13 @@ def write_outputs(result: AnalysisResult, out_dir: Path) -> dict[str, Path]:
 
     # CSV: one row per creative, easy to copy into a spreadsheet.
     csv_path = out_dir / "creatives.csv"
+    score_by_index = {r.ad_index: r.score for r in result.rankings}
+    reason_by_index = {r.ad_index: r.reason for r in result.rankings}
     with csv_path.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(
             [
+                "rank_score",
                 "title",
                 "angle",
                 "duration_s",
@@ -85,11 +88,13 @@ def write_outputs(result: AnalysisResult, out_dir: Path) -> dict[str, Path]:
                 "cta",
                 "hook_on_screen",
                 "cta_on_screen",
+                "ranking_reason",
             ]
         )
-        for c in result.creatives:
+        for i, c in enumerate(result.creatives):
             w.writerow(
                 [
+                    score_by_index.get(i, ""),
                     c.title,
                     c.angle,
                     c.estimated_duration_seconds,
@@ -99,12 +104,25 @@ def write_outputs(result: AnalysisResult, out_dir: Path) -> dict[str, Path]:
                     c.cta.text_darija,
                     c.hook.on_screen_text,
                     c.cta.on_screen_text,
+                    reason_by_index.get(i, ""),
                 ]
             )
+
+    # Edit plans (per top-3 scripts)
+    edit_plan_path = out_dir / "edit_plans.json"
+    edit_plan_path.write_text(
+        json.dumps(
+            [json.loads(ep.model_dump_json()) for ep in result.edit_plans],
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
 
     return {
         "json": json_path,
         "markdown": md_path,
         "html": html_path,
         "csv": csv_path,
+        "edit_plans": edit_plan_path,
     }

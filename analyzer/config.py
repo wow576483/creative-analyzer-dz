@@ -40,7 +40,7 @@ class Settings:
     # TTS (used by the dubbing pipeline)
     tts_api_key: str | None = None
     tts_model: str = "gemini-2.5-flash-preview-tts"
-    tts_voice: str = "Kore"
+    tts_voice: str = "Achird"
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -81,7 +81,10 @@ class Settings:
             min_scene_seconds=float(os.environ.get("MIN_SCENE_SECONDS", "1.2")),
             tts_api_key=tts_key,
             tts_model=os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
-            tts_voice=os.environ.get("GEMINI_TTS_VOICE", "Kore"),
+            # Accept TTS_VOICE (preferred, matches the constant in tts.py) and
+            # fall back to the legacy GEMINI_TTS_VOICE name for older deployments.
+            tts_voice=os.environ.get("TTS_VOICE")
+            or os.environ.get("GEMINI_TTS_VOICE", "Achird"),
         )
 
     @property
