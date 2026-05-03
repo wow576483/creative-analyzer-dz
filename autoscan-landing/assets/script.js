@@ -196,7 +196,10 @@
   function updateSummary() {
     const id = productSel ? productSel.value : "";
     const product = productById(id);
-    const qty = Math.max(1, parseInt(qtyInput ? qtyInput.value : "1", 10) || 1);
+    // Clamp to [1, 20] so the summary always agrees with readForm() — without
+    // the upper bound, typing 50 into the input would show a 50× total here
+    // while the submitted WhatsApp message would say × 20.
+    const qty = Math.max(1, Math.min(20, parseInt(qtyInput ? qtyInput.value : "1", 10) || 1));
     const delivery = (document.querySelector('input[name="delivery"]:checked') || {}).value || "home";
     const subtotal = product ? product.price * qty : 0;
     const dPrice = computeDeliveryPrice(subtotal, delivery);
