@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover"
+  />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="AutoScan DZ — اكشف أسرار سيارتك بنفسك. أدوات فحص احترافية، الدفع عند الاستلام، توصيل 58 ولاية." />
+  <meta property="og:title" content="AutoScan DZ — أسرار السيارات اللي ما قالوهالكش 🚗" />
+  <meta property="og:description" content="اكشف أعطال سيارتك بنفسك في ثواني. وفّر آلاف الدنانير عند الميكانيكي. الدفع عند الاستلام، توصيل 58 ولاية." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
+  <title>AutoScan DZ — اكشف أسرار سيارتك بنفسك في ثواني 🔥</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <!-- ───────────── Top promo bar ───────────── -->
+  <div class="promo-bar" id="promo-bar">
+    <span class="promo-bar__icon">🔥</span>
+    <span class="promo-bar__text">
+      عرض اليوم: توصيل لكل الجزائر — الدفع عند الاستلام —
+      <strong>عرض ينتهي في</strong>
+      <span id="promo-countdown" class="promo-bar__time">--:--:--</span>
+    </span>
+  </div>
+
+  <!-- ───────────── Header ───────────── -->
+  <header class="site-header">
+    <a href="#hero" class="brand" aria-label="AutoScan DZ">
+      <img src="assets/img/logo.svg" alt="AutoScan DZ" class="brand__logo" />
+      <span class="brand__name">AutoScan <span class="brand__accent">DZ</span></span>
+    </a>
+    <a class="header-cta" href="#order">اطلب الآن</a>
+  </header>
+
+  <!-- ───────────── Hero ───────────── -->
+  <section class="hero" id="hero">
+    <div class="hero__bg" aria-hidden="true"></div>
+    <div class="hero__inner">
+      <span class="hero__pill">🇩🇿 الجزائر فقط — DZ Only</span>
+      <h1 class="hero__title">
+        اكشف <span class="hl">أسرار سيارتك</span> بنفسك<br />
+        في <span class="hl-red">5 ثواني</span> — بلا ميكانيكي
+      </h1>
+      <p class="hero__subtitle">
+        وفّر <strong>آلاف الدنانير</strong> اللي تخسرها كل شهر عند الميكانيكي،
+        وافحص أي سيارة قبل ما تشريها — بأدوات احترافية تستعمل بهاتفك.
+      </p>
+
+      <div class="hero__media">
+        <div class="hero__media-frame">
+          <div class="hero__media-placeholder" aria-label="فيديو المنتج أثناء الاستخدام">
+            <div class="hero__media-play">▶</div>
+            <p>شاهد المنتج أثناء الاستخدام</p>
+          </div>
+        </div>
+        <div class="hero__rating">
+          <div class="stars">★★★★★</div>
+          <span><strong id="hero-rating">4.9</strong>/5 من <strong id="hero-reviews">1284</strong> عميل</span>
+        </div>
+      </div>
+
+      <div class="hero__cta-row">
+        <a href="#order" class="btn btn--primary btn--xl">
+          <span>🛒 اطلب الآن — الدفع عند الاستلام</span>
+        </a>
+        <a href="#products" class="btn btn--ghost">شاهد المنتجات ↓</a>
+      </div>
+
+      <ul class="hero__badges">
+        <li>🚚 توصيل 58 ولاية</li>
+        <li>💵 الدفع عند الاستلام</li>
+        <li>🛡️ ضمان 7 أيام</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ───────────── Problem → Solution ───────────── -->
+  <section class="section problem">
+    <div class="container">
+      <h2 class="section__title">
+        <span class="hl-red">المشكلة</span> اللي يعاني منها كل صاحب سيارة 😤
+      </h2>
+      <div class="problem__grid">
+        <div class="problem__card">
+          <div class="problem__icon">😡</div>
+          <h3>الميكانيكي يغشّك</h3>
+          <p>يقولك "هاد القطعة لازم تتبدّل" وأنت ما تعرفش واش راهو يخدم في سيارتك.</p>
+        </div>
+        <div class="problem__card">
+          <div class="problem__icon">💸</div>
+          <h3>تكاليف مرتفعة</h3>
+          <p>كل دخلة عند الميكانيكي تكلّفك آلاف الدنانير على حاجات بسيطة كان تحلّها بنفسك.</p>
+        </div>
+        <div class="problem__card">
+          <div class="problem__icon">🚗</div>
+          <h3>سيارة مغشوشة</h3>
+          <p>تشري سيارة مستعملة وتلقى راها خدمت في حادث — ولا أحد يقولك الحقيقة.</p>
+        </div>
+        <div class="problem__card">
+          <div class="problem__icon">❓</div>
+          <h3>ضوء Check Engine</h3>
+          <p>يولّع ولا تعرف واش معناه — تروح للميكانيكي ويقولك أي حاجة باش يكسبك.</p>
+        </div>
+      </div>
+
+      <div class="solution">
+        <div class="solution__arrow">↓</div>
+        <h3 class="solution__title">
+          الحل: <span class="hl">AutoScan DZ</span> — أدوات احترافية بسيطة الاستعمال
+        </h3>
+        <p class="solution__desc">
+          أدوات نستعملها ميكانيكيي الوكالات — نوفّروهالك بسعر يناسب جيبك،
+          مع شرح بالدارجة الجزائرية ودعم على الواتساب.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── Products ───────────── -->
+  <section class="section products" id="products">
+    <div class="container">
+      <h2 class="section__title">
+        🔥 المنتجات الأكثر مبيعاً
+      </h2>
+      <p class="section__subtitle">اختر منتجك واطلبو — يصلك في 24-72 ساعة</p>
+
+      <div class="products__grid" id="products-grid">
+        <!-- Filled by script.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── Repeated CTA ───────────── -->
+  <section class="cta-banner">
+    <div class="container cta-banner__inner">
+      <h3>⚡ عرض محدود — اليوم فقط</h3>
+      <p>الكميات محدودة. اطلب قبل ما تنفذ.</p>
+      <a href="#order" class="btn btn--primary btn--lg">اطلب الآن قبل نفاذ الكمية</a>
+    </div>
+  </section>
+
+  <!-- ───────────── Social Proof ───────────── -->
+  <section class="section social" id="social">
+    <div class="container">
+      <h2 class="section__title">
+        💬 آراء عملائنا في <span class="hl">TikTok</span>
+      </h2>
+      <p class="section__subtitle">
+        <span class="stars stars--inline">★★★★★</span>
+        <strong id="social-rating">4.9</strong>/5 — أكثر من
+        <strong id="social-count">1284</strong> عميل سعيد
+      </p>
+
+      <div class="comments" id="comments-grid">
+        <!-- Filled by script.js (TikTok-style comments) -->
+      </div>
+
+      <div class="before-after">
+        <div class="before-after__card">
+          <div class="before-after__label before-after__label--bad">قبل ❌</div>
+          <p>"دفعت 25 ألف عند الميكانيكي على عطل بسيط"</p>
+        </div>
+        <div class="before-after__card">
+          <div class="before-after__label before-after__label--good">بعد ✅</div>
+          <p>"كشفت العطل بنفسي في 5 ثواني، كلّفني 0 دج"</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── Why Us ───────────── -->
+  <section class="section why">
+    <div class="container">
+      <h2 class="section__title">⚙️ علاش تختار <span class="hl">AutoScan DZ</span>؟</h2>
+      <div class="why__grid">
+        <div class="why__card"><span class="why__icon">🚚</span><h3>توصيل 58 ولاية</h3><p>نوصلك للباب أو للمكتب في كل ولايات الجزائر.</p></div>
+        <div class="why__card"><span class="why__icon">💵</span><h3>الدفع عند الاستلام</h3><p>تدفع كي يوصلك المنتج — بلا مخاطرة.</p></div>
+        <div class="why__card"><span class="why__icon">🛡️</span><h3>منتج مجرّب</h3><p>أكثر من 1284 عميل جربوه ونصحوا بيه.</p></div>
+        <div class="why__card"><span class="why__icon">💬</span><h3>دعم واتساب</h3><p>فريقنا متاح يجاوبك ويرشدك قبل وبعد الطلب.</p></div>
+        <div class="why__card"><span class="why__icon">📦</span><h3>منتج أصلي</h3><p>كل المنتجات أصلية مع ضمان استبدال 7 أيام.</p></div>
+        <div class="why__card"><span class="why__icon">⚡</span><h3>تسليم سريع</h3><p>الطلبات تخرج في نفس اليوم. توصيل في 24-72 ساعة.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── Delivery ───────────── -->
+  <section class="section delivery" id="delivery">
+    <div class="container">
+      <h2 class="section__title">📦 معلومات التوصيل</h2>
+      <div class="delivery__grid">
+        <div class="delivery__card">
+          <div class="delivery__icon">🏠</div>
+          <h3>التوصيل للمنزل</h3>
+          <p class="delivery__price"><span id="delivery-home">600</span> دج</p>
+          <ul>
+            <li>يوصلك على باب الدار</li>
+            <li>متوفر في 58 ولاية</li>
+            <li>24-72 ساعة</li>
+          </ul>
+        </div>
+        <div class="delivery__card">
+          <div class="delivery__icon">🏢</div>
+          <h3>التوصيل للمكتب</h3>
+          <p class="delivery__price"><span id="delivery-office">400</span> دج</p>
+          <ul>
+            <li>أرخص — تروح تجيبو من المكتب</li>
+            <li>StopDesk / Yalidine / ZR Express</li>
+            <li>24-48 ساعة</li>
+          </ul>
+        </div>
+        <div class="delivery__card delivery__card--cod">
+          <div class="delivery__icon">💵</div>
+          <h3>الدفع عند الاستلام</h3>
+          <p>ما تدفعش حتى يوصلك المنتج. شفه، جرّبو، وبعدها ادفع.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── Order Form ───────────── -->
+  <section class="section order" id="order">
+    <div class="container order__inner">
+      <h2 class="section__title">🧾 املأ الطلب الآن</h2>
+      <p class="section__subtitle">سيتصل بك فريقنا خلال دقائق لتأكيد الطلب</p>
+
+      <form id="order-form" class="order-form" novalidate>
+        <div class="form-row">
+          <label for="f-name">الاسم الكامل <span class="req">*</span></label>
+          <input id="f-name" name="fullName" type="text" required autocomplete="name" placeholder="مثال: أحمد بن علي" />
+        </div>
+
+        <div class="form-row">
+          <label for="f-phone">رقم الهاتف <span class="req">*</span></label>
+          <input
+            id="f-phone"
+            name="phone"
+            type="tel"
+            required
+            inputmode="tel"
+            autocomplete="tel"
+            placeholder="05XX XX XX XX"
+            pattern="^(\+?213|0)?[567]\d{8}$"
+          />
+          <small class="form-help">رقم جزائري — مثال: 0555123456</small>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="f-wilaya">الولاية <span class="req">*</span></label>
+            <select id="f-wilaya" name="wilaya" required>
+              <option value="">— اختر الولاية —</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="f-commune">البلدية <span class="req">*</span></label>
+            <input id="f-commune" name="commune" type="text" required placeholder="اكتب اسم البلدية" />
+          </div>
+        </div>
+
+        <fieldset class="form-row form-row--radio">
+          <legend>نوع التوصيل <span class="req">*</span></legend>
+          <label class="radio-card">
+            <input type="radio" name="delivery" value="home" required checked />
+            <span class="radio-card__inner">
+              <span class="radio-card__icon">🏠</span>
+              <span class="radio-card__title">للمنزل</span>
+              <span class="radio-card__price"><span id="radio-home-price">600</span> دج</span>
+            </span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="delivery" value="office" />
+            <span class="radio-card__inner">
+              <span class="radio-card__icon">🏢</span>
+              <span class="radio-card__title">للمكتب</span>
+              <span class="radio-card__price"><span id="radio-office-price">400</span> دج</span>
+            </span>
+          </label>
+        </fieldset>
+
+        <div class="form-row">
+          <label for="f-product">المنتج <span class="req">*</span></label>
+          <select id="f-product" name="product" required>
+            <option value="">— اختر المنتج —</option>
+          </select>
+        </div>
+
+        <div class="form-row form-row--qty">
+          <label for="f-qty">الكمية</label>
+          <div class="qty">
+            <button type="button" class="qty__btn" data-qty="-1" aria-label="نقص">−</button>
+            <input id="f-qty" name="quantity" type="number" min="1" max="20" value="1" inputmode="numeric" />
+            <button type="button" class="qty__btn" data-qty="+1" aria-label="زيادة">+</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="f-notes">ملاحظات (اختياري)</label>
+          <textarea id="f-notes" name="notes" rows="2" placeholder="أي معلومة إضافية تحب تذكرها"></textarea>
+        </div>
+
+        <!-- Order summary -->
+        <div class="order-summary" id="order-summary">
+          <div class="order-summary__row"><span>المنتج:</span><strong id="sum-product">—</strong></div>
+          <div class="order-summary__row"><span>السعر:</span><strong id="sum-price">— دج</strong></div>
+          <div class="order-summary__row"><span>الكمية:</span><strong id="sum-qty">1</strong></div>
+          <div class="order-summary__row"><span>التوصيل:</span><strong id="sum-delivery">— دج</strong></div>
+          <div class="order-summary__row order-summary__row--total"><span>المجموع:</span><strong id="sum-total">— دج</strong></div>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--xl btn--block" id="submit-btn">
+          ✅ تأكيد الطلب — الدفع عند الاستلام
+        </button>
+
+        <p class="form-secure">🔒 معلوماتك محفوظة وآمنة. لن نشاركها مع أحد.</p>
+        <div class="form-status" id="form-status" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ───────────── FAQ ───────────── -->
+  <section class="section faq" id="faq">
+    <div class="container">
+      <h2 class="section__title">❓ أسئلة متكررة</h2>
+      <details class="faq-item" open>
+        <summary>كيفاش نطلب؟</summary>
+        <p>اكتب اسمك ورقم هاتفك والولاية في الفورم فوق، نتصلوا بيك في أقل من ساعة لتأكيد الطلب.</p>
+      </details>
+      <details class="faq-item">
+        <summary>كيفاش ندفع؟</summary>
+        <p>الدفع <strong>عند الاستلام (COD)</strong> — تدفع كاش لساعي البريد كي يوصلك المنتج.</p>
+      </details>
+      <details class="faq-item">
+        <summary>قداش يدوم التوصيل؟</summary>
+        <p>عادةً 24-72 ساعة حسب الولاية. الولايات القريبة تجيها في يوم، البعيدة 2-3 أيام.</p>
+      </details>
+      <details class="faq-item">
+        <summary>المنتج أصلي؟</summary>
+        <p>نعم 100% — كل منتجاتنا أصلية مع ضمان استبدال 7 أيام إذا صار أي مشكل.</p>
+      </details>
+      <details class="faq-item">
+        <summary>كيفاش يخدم جهاز OBD2؟</summary>
+        <p>تدخل الجهاز في منفذ OBD تحت الڤيدون، تشغّل التطبيق على هاتفك (Bluetooth)، ويبدأ يقرا أعطال السيارة.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ───────────── Footer ───────────── -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span id="year">2025</span> AutoScan DZ — كل الحقوق محفوظة.</p>
+      <p class="site-footer__small">
+        صنع بـ ❤️ في الجزائر — الدفع عند الاستلام — توصيل 58 ولاية
+      </p>
+    </div>
+  </footer>
+
+  <!-- ───────────── Floating buttons ───────────── -->
+  <a id="whatsapp-fab" class="fab fab--whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+      <path fill="currentColor" d="M19.05 4.91A10 10 0 0 0 4.45 18.6L3 22l3.49-1.43A10 10 0 1 0 19.05 4.91Zm-2.1 13.06c-.31.86-1.5 1.6-2.36 1.74c-.6.1-1.32.18-3.74-.8c-3.14-1.3-5.16-4.55-5.32-4.76c-.16-.21-1.27-1.69-1.27-3.23c0-1.55.81-2.3 1.1-2.62c.24-.27.65-.4 1.05-.4l.32.01c.34.01.51.04.74.59c.31.7.95 2.42 1.04 2.6c.08.18.13.39.02.6c-.1.21-.18.31-.36.5c-.18.19-.34.34-.52.55c-.16.18-.34.38-.13.74c.21.36.92 1.52 1.97 2.46c1.36 1.21 2.5 1.59 2.84 1.74c.27.11.59.08.79-.13c.25-.27.56-.71.88-1.16c.23-.32.51-.36.81-.25c.31.11 1.99.94 2.33 1.11c.34.17.57.25.66.39c.08.14.08.83-.23 1.69Z"/>
+    </svg>
+  </a>
+
+  <!-- Sticky CTA on mobile -->
+  <a href="#order" class="sticky-cta" id="sticky-cta">
+    <span class="sticky-cta__icon">🛒</span>
+    <span class="sticky-cta__text">
+      <strong>اطلب الآن</strong>
+      <small>الدفع عند الاستلام • توصيل 58 ولاية</small>
+    </span>
+    <span class="sticky-cta__arrow">←</span>
+  </a>
+
+  <!-- Fake order popup -->
+  <div id="fake-order" class="fake-order" role="status" aria-live="polite" aria-hidden="true">
+    <div class="fake-order__avatar">🚚</div>
+    <div class="fake-order__body">
+      <strong id="fake-order-user">—</strong>
+      <span id="fake-order-text">طلب منتج من <strong>—</strong></span>
+      <small id="fake-order-time">منذ دقيقتين</small>
+    </div>
+  </div>
+
+  <script src="assets/wilayas.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/script.js"></script>
+</body>
+</html>
