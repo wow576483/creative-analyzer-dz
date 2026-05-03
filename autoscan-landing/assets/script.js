@@ -195,7 +195,7 @@
   const waBaseMsg = (cfg.whatsapp && cfg.whatsapp.defaultMessage) || "السلام عليكم، نحب نطلب من AutoScan DZ:";
   const fab = $("#whatsapp-fab");
   if (fab && waNumber) {
-    fab.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(waBaseMsg)}`;
+    fab.href = `https://api.whatsapp.com/send/?phone=${waNumber}&text=${encodeURIComponent(waBaseMsg)}`;
   }
   function buildWhatsAppOrderUrl(formData) {
     const product = productById(formData.product);
@@ -219,10 +219,14 @@
       formData.notes ? `📝 ملاحظات: ${formData.notes}` : null,
     ].filter((line) => line !== null && line !== undefined);
     const msg = lines.join("\n");
+    // NOTE: use api.whatsapp.com/send/ directly. wa.me redirects to api.whatsapp.com
+    // but mangles 4-byte UTF-8 in the `text` param (emoji bytes become U+FFFD).
+    // Calling api.whatsapp.com directly preserves the message verbatim.
+    const encoded = encodeURIComponent(msg);
     if (waNumber) {
-      return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+      return `https://api.whatsapp.com/send/?phone=${waNumber}&text=${encoded}`;
     }
-    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    return `https://api.whatsapp.com/send/?text=${encoded}`;
   }
 
   // ---------- Form submit ----------
