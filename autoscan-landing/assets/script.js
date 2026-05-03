@@ -202,6 +202,8 @@
     const qty = formData.quantity || 1;
     const dPrice = formData.delivery === "office" ? officePrice : homePrice;
     const total = product ? product.price * qty + dPrice : 0;
+    // NOTE: keep empty strings for visual blank-line separators between sections.
+    // Use a null-only filter so the blank lines survive.
     const lines = [
       waBaseMsg,
       "",
@@ -215,7 +217,7 @@
       `📍 الولاية: ${formData.wilaya}`,
       `🏘️ البلدية: ${formData.commune}`,
       formData.notes ? `📝 ملاحظات: ${formData.notes}` : null,
-    ].filter(Boolean);
+    ].filter((line) => line !== null && line !== undefined);
     const msg = lines.join("\n");
     if (waNumber) {
       return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
@@ -262,7 +264,7 @@
 
   function submitToGoogleForm(data) {
     const gf = cfg.googleForm || {};
-    if (!gf.formId) return Promise.resolve(false);
+    if (!gf.formId) return Promise.resolve("skipped");
 
     const url = `https://docs.google.com/forms/d/e/${gf.formId}/formResponse`;
     const body = new URLSearchParams();
@@ -279,15 +281,18 @@
     if (e.quantity) body.append(e.quantity, String(data.quantity));
     if (e.notes) body.append(e.notes, data.notes || "");
 
-    // no-cors mode → can't read response, but request is delivered.
+    // no-cors mode → response is opaque; we CANNOT verify whether the
+    // submission was accepted by Google. We only know the request was sent.
+    // Returns "sent" if the network request completed, "failed" on network
+    // error, or "skipped" if formId is not configured (handled above).
     return fetch(url, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
     })
-      .then(() => true)
-      .catch(() => false);
+      .then(() => "sent")
+      .catch(() => "failed");
   }
 
   if (form) {
@@ -302,18 +307,21 @@
       const oldText = submitBtn.textContent;
       submitBtn.textContent = "⏳ جاري الإرسال…";
 
-      let savedToSheet = false;
-      try { savedToSheet = await submitToGoogleForm(data); } catch (_) { savedToSheet = false; }
+      let formStatus = "skipped"; // "sent" | "failed" | "skipped"
+      try { formStatus = await submitToGoogleForm(data); } catch (_) { formStatus = "failed"; }
 
       const waUrl = buildWhatsAppOrderUrl(data);
 
       submitBtn.disabled = false;
       submitBtn.textContent = oldText;
 
-      if (savedToSheet) {
-        setStatus("✅ طلبك وصلنا! سنتصل بك خلال دقائق لتأكيد التوصيل.", "success");
+      // We can't verify Google Forms success in no-cors mode (opaque response),
+      // so don't falsely claim "وصلنا". Always rely on WhatsApp as the
+      // confirmed delivery channel.
+      if (formStatus === "failed") {
+        setStatus("⚠️ تعذّر الإرسال التلقائي. اضغط 'إرسال' في واتساب لتأكيد طلبك.", "error");
       } else {
-        setStatus("✅ تم تجهيز طلبك. سنفتح واتساب لإرساله مباشرة لفريقنا.", "success");
+        setStatus("✅ تم تجهيز طلبك. اضغط 'إرسال' في واتساب لتأكيده فوراً مع فريقنا.", "success");
       }
 
       // Open WhatsApp with order details — safe fallback always works
