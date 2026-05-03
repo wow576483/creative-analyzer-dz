@@ -262,7 +262,10 @@
       commune: (fd.get("commune") || "").toString().trim(),
       delivery: (fd.get("delivery") || "home").toString(),
       product: (fd.get("product") || "").toString(),
-      quantity: parseInt((fd.get("quantity") || "1").toString(), 10) || 1,
+      // Clamp to [1, 20] to match the qty-button bounds. Without clamping,
+      // a user typing a negative number into the input would submit it (the
+      // displayed summary uses Math.max(1, ...) so the two would disagree).
+      quantity: Math.max(1, Math.min(20, parseInt((fd.get("quantity") || "1").toString(), 10) || 1)),
       notes: (fd.get("notes") || "").toString().trim(),
     };
   }
@@ -311,39 +314,40 @@
   }
 
   if (form) {
-    form.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
       setStatus("");
       const data = readForm();
       const err = validate(data);
       if (err) { setStatus(err, "error"); return; }
 
+      // CRITICAL: open WhatsApp synchronously inside the user-gesture
+      // tick, BEFORE any await. If we wait for the Google Form fetch first,
+      // the popup blocker (especially iOS Safari, our primary TikTok
+      // audience) will block window.open. Show a tentative status now;
+      // we'll upgrade it to a warning if the Google Form fetch fails.
+      const waUrl = buildWhatsAppOrderUrl(data);
+      window.open(waUrl, "_blank", "noopener");
+      setStatus("✅ تم تجهيز طلبك. اضغط 'إرسال' في واتساب لتأكيده فوراً مع فريقنا.", "success");
+
       submitBtn.disabled = true;
       const oldText = submitBtn.textContent;
       submitBtn.textContent = "⏳ جاري الإرسال…";
 
-      let formStatus = "skipped"; // "sent" | "failed" | "skipped"
-      try { formStatus = await submitToGoogleForm(data); } catch (_) { formStatus = "failed"; }
-
-      const waUrl = buildWhatsAppOrderUrl(data);
-
-      submitBtn.disabled = false;
-      submitBtn.textContent = oldText;
-
-      // We can't verify Google Forms success in no-cors mode (opaque response),
-      // so don't falsely claim "وصلنا". Always rely on WhatsApp as the
-      // confirmed delivery channel.
-      if (formStatus === "failed") {
-        setStatus("⚠️ تعذّر الإرسال التلقائي. اضغط 'إرسال' في واتساب لتأكيد طلبك.", "error");
-      } else {
-        setStatus("✅ تم تجهيز طلبك. اضغط 'إرسال' في واتساب لتأكيده فوراً مع فريقنا.", "success");
-      }
-
-      // Open WhatsApp with order details — safe fallback always works
-      window.open(waUrl, "_blank", "noopener");
-
-      try { form.reset(); } catch (_) {}
-      updateSummary();
+      // Fire-and-forget: Google Form is a best-effort secondary channel
+      // (no-cors response is opaque anyway). WhatsApp is the confirmed
+      // delivery channel and is already opening.
+      submitToGoogleForm(data)
+        .catch(() => "failed")
+        .then((formStatus) => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = oldText;
+          if (formStatus === "failed") {
+            setStatus("⚠️ تعذّر الإرسال التلقائي. اضغط 'إرسال' في واتساب لتأكيد طلبك.", "error");
+          }
+          try { form.reset(); } catch (_) {}
+          updateSummary();
+        });
     });
   }
 
