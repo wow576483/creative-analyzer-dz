@@ -21,6 +21,15 @@
   // ---------- Delivery prices ----------
   const homePrice = (cfg.delivery && cfg.delivery.home) || 0;
   const officePrice = (cfg.delivery && cfg.delivery.office) || 0;
+  const freeOverThreshold = cfg.delivery && typeof cfg.delivery.freeOver === "number" ? cfg.delivery.freeOver : null;
+
+  // Compute delivery price for an order subtotal. If freeOver is configured
+  // and the subtotal meets/exceeds it, delivery is free (returns 0).
+  function computeDeliveryPrice(subtotal, deliveryType) {
+    const base = deliveryType === "office" ? officePrice : homePrice;
+    if (freeOverThreshold !== null && subtotal >= freeOverThreshold) return 0;
+    return base;
+  }
   const setText = (id, v) => { const el = $("#" + id); if (el) el.textContent = v; };
   setText("delivery-home", homePrice.toLocaleString("fr-DZ"));
   setText("delivery-office", officePrice.toLocaleString("fr-DZ"));
@@ -176,13 +185,14 @@
     const product = productById(id);
     const qty = Math.max(1, parseInt(qtyInput ? qtyInput.value : "1", 10) || 1);
     const delivery = (document.querySelector('input[name="delivery"]:checked') || {}).value || "home";
-    const dPrice = delivery === "office" ? officePrice : homePrice;
+    const subtotal = product ? product.price * qty : 0;
+    const dPrice = computeDeliveryPrice(subtotal, delivery);
 
     setText("sum-product", product ? product.name : "—");
     setText("sum-price", product ? fmtDA(product.price) : "— دج");
     setText("sum-qty", qty);
-    setText("sum-delivery", fmtDA(dPrice));
-    const total = product ? product.price * qty + dPrice : 0;
+    setText("sum-delivery", dPrice === 0 && product ? "مجاني" : fmtDA(dPrice));
+    const total = product ? subtotal + dPrice : 0;
     setText("sum-total", total ? fmtDA(total) : "— دج");
   }
   if (productSel) productSel.addEventListener("change", updateSummary);
@@ -200,8 +210,9 @@
   function buildWhatsAppOrderUrl(formData) {
     const product = productById(formData.product);
     const qty = formData.quantity || 1;
-    const dPrice = formData.delivery === "office" ? officePrice : homePrice;
-    const total = product ? product.price * qty + dPrice : 0;
+    const subtotal = product ? product.price * qty : 0;
+    const dPrice = computeDeliveryPrice(subtotal, formData.delivery);
+    const total = product ? subtotal + dPrice : 0;
     // NOTE: keep empty strings for visual blank-line separators between sections.
     // Use a null-only filter so the blank lines survive.
     const lines = [
@@ -209,7 +220,7 @@
       "",
       `🛒 المنتج: ${product ? product.name : formData.product}`,
       product ? `💰 السعر: ${fmtDA(product.price)} × ${qty}` : null,
-      `🚚 التوصيل: ${formData.delivery === "office" ? "للمكتب" : "للمنزل"} (${fmtDA(dPrice)})`,
+      `🚚 التوصيل: ${formData.delivery === "office" ? "للمكتب" : "للمنزل"} (${dPrice === 0 ? "مجاني" : fmtDA(dPrice)})`,
       total ? `💵 المجموع: ${fmtDA(total)}` : null,
       "",
       `👤 الاسم: ${formData.fullName}`,
