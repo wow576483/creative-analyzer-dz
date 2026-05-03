@@ -658,7 +658,7 @@ select {
   border: 0; padding: 0; margin: 0;
   display: grid; gap: 8px;
 }
-.form-row--radio legend { margin-bottom: 4px; }
+.form-row--radio legend { margin-bottom: 4px; grid-column: 1 / -1; }
 .form-row--radio { grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch; }
 
 .radio-card { display: block; cursor: pointer; }
