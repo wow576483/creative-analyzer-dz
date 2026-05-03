@@ -72,9 +72,14 @@
                 ${p.oldPrice ? `<div class="product__old">${fmtDA(p.oldPrice)}</div>` : ""}
                 ${save ? `<div class="product__save">وفّر ${save.toLocaleString("fr-DZ")} دج</div>` : ""}
               </div>
-              <button type="button" class="btn btn--primary btn--block product__cta" data-product="${p.id}">
-                🛒 اطلب هذا المنتج
-              </button>
+              <div class="product__actions">
+                <button type="button" class="btn btn--primary btn--block product__cta" data-product="${p.id}">
+                  🛒 اطلب عبر الفورم
+                </button>
+                <a class="btn btn--whatsapp btn--block product__wa" data-wa-product="${p.id}" target="_blank" rel="noopener">
+                  💬 اطلب عبر واتساب
+                </a>
+              </div>
             </div>
           </article>
         `;
@@ -102,6 +107,11 @@
       opt.textContent = `${p.name} — ${fmtDA(p.price)}`;
       productSel.appendChild(opt);
     });
+    // Pre-select the first product so the order summary shows a real total
+    // immediately and the user can submit faster.
+    if (cfg.products.length > 0) {
+      productSel.value = cfg.products[0].id;
+    }
   }
 
   // ---------- Render social proof comments ----------
@@ -166,7 +176,7 @@
     });
   });
 
-  // ---------- "Order this product" buttons ----------
+  // ---------- "Order via form" buttons (per-product) ----------
   document.body.addEventListener("click", (e) => {
     const t = e.target.closest("[data-product]");
     if (!t) return;
@@ -176,6 +186,9 @@
       updateSummary();
       const orderEl = $("#order");
       if (orderEl) orderEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Focus the name field so the user can start typing immediately.
+      const nameField = $("#f-name");
+      if (nameField) setTimeout(() => nameField.focus({ preventScroll: true }), 350);
     }
   });
 
@@ -207,6 +220,30 @@
   if (fab && waNumber) {
     fab.href = `https://api.whatsapp.com/send/?phone=${waNumber}&text=${encodeURIComponent(waBaseMsg)}`;
   }
+  // Build a quick "I want to order this product" WhatsApp URL for the
+  // per-product quick-buy buttons. The customer fills name/wilaya/etc.
+  // directly in the WhatsApp chat — useful when they don't want the form.
+  function buildProductQuickWaUrl(product) {
+    const lines = [
+      waBaseMsg,
+      "",
+      `🛒 المنتج: ${product.name}`,
+      `💰 السعر: ${fmtDA(product.price)}`,
+      "",
+      "حابب نطلب — راني نستنى تأكيد فريقكم.",
+    ];
+    const encoded = encodeURIComponent(lines.join("\n"));
+    if (waNumber) {
+      return `https://api.whatsapp.com/send/?phone=${waNumber}&text=${encoded}`;
+    }
+    return `https://api.whatsapp.com/send/?text=${encoded}`;
+  }
+  $$("[data-wa-product]").forEach((a) => {
+    const id = a.dataset.waProduct;
+    const product = productById(id);
+    if (product) a.href = buildProductQuickWaUrl(product);
+  });
+
   function buildWhatsAppOrderUrl(formData) {
     const product = productById(formData.product);
     const qty = formData.quantity || 1;
