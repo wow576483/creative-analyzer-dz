@@ -40,6 +40,19 @@ auth.post('/register', async (c) => {
   return c.json({ token, user });
 });
 
+// Lazily provision the admin account from env on first matching login, so the
+// dashboard is reachable without a manual seed step. No-op once it exists.
+async function ensureAdmin(c: { env: Env }, email: string) {
+  const adminEmail = (c.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  if (!adminEmail || email !== adminEmail || !c.env.ADMIN_PASSWORD) return;
+  const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(adminEmail).first();
+  if (existing) return;
+  const hash = await hashPassword(c.env.ADMIN_PASSWORD);
+  await c.env.DB.prepare('INSERT INTO users (id, email, password_hash, role, name) VALUES (?, ?, ?, ?, ?)')
+    .bind(newId('usr'), adminEmail, hash, 'admin', '3ARSI Admin')
+    .run();
+}
+
 auth.post('/login', async (c) => {
   const body = await c.req
     .json<{ email?: string; password?: string }>()
@@ -47,6 +60,7 @@ auth.post('/login', async (c) => {
   const email = (body.email || '').trim().toLowerCase();
   const password = body.password || '';
 
+  await ensureAdmin(c, email);
   const row = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first<UserRow>();
   if (!row || !(await verifyPassword(password, row.password_hash))) {
     await audit(c.env, { action: 'auth.login_failed', target: email, ip: c.req.header('CF-Connecting-IP') });

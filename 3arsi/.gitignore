@@ -10,3 +10,7 @@ out/
 .DS_Store
 coverage/
 .turbo/
+
+# build info
+*.tsbuildinfo
+next-env.d.ts
