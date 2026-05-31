@@ -1,4 +1,6 @@
 // HMAC-signed, expiring tokens for secure R2 export downloads.
+import { timingSafeEqual } from './safe-compare.js';
+
 function b64url(bytes: Uint8Array): string {
   let s = btoa(String.fromCharCode(...bytes));
   return s.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -39,7 +41,7 @@ export async function verifyDownload(secret: string, token: string): Promise<Sig
   const [body, sig] = token.split('.');
   if (!body || !sig) return null;
   const expected = b64url(await hmac(secret, body));
-  if (expected !== sig) return null;
+  if (!timingSafeEqual(expected, sig)) return null;
   try {
     const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(body))) as SignedPayload;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;

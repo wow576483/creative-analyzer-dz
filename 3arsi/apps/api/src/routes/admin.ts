@@ -49,7 +49,7 @@ admin.post('/templates', async (c) => {
   await c.env.DB.prepare(
     'INSERT INTO templates (id, key, name, wedding_type, payload, active) VALUES (?, ?, ?, ?, ?, ?)',
   )
-    .bind(id, body.key, body.name, body.wedding_type ?? null, JSON.stringify(body.payload ?? {}), body.active ? 1 : 1)
+    .bind(id, body.key, body.name, body.wedding_type ?? null, JSON.stringify(body.payload ?? {}), body.active === false ? 0 : 1)
     .run();
   return c.json({ id });
 });

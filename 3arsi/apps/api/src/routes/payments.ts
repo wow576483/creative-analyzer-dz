@@ -4,6 +4,7 @@ import { audit } from '../lib/audit.js';
 import { newId } from '../lib/ids.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireBrideAccess } from '../middleware/tenant.js';
+import { timingSafeEqual } from '../lib/safe-compare.js';
 
 const payments = new Hono<{ Bindings: Env; Variables: Vars }>();
 
@@ -75,7 +76,7 @@ payments.post('/webhook', async (c) => {
   const raw = await c.req.text();
   const signature = c.req.header('signature') || '';
   const expected = await hmacHex(c.env.CHARGILY_WEBHOOK_SECRET, raw);
-  if (!signature || signature !== expected) {
+  if (!signature || !timingSafeEqual(signature, expected)) {
     await audit(c.env, { action: 'payment.webhook_bad_sig' });
     return c.json({ error: 'invalid_signature' }, 403);
   }

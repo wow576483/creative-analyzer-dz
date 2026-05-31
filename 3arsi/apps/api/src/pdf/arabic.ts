@@ -59,7 +59,7 @@ const LAMALEF: Record<string, [string, string]> = {
 };
 
 const isArabic = (ch: string) => ch >= '\u0600' && ch <= '\u06FF';
-const TASHKEEL = /[\u064B-\u065F\u0670]/;
+const TASHKEEL = /[\u064B-\u065F\u0670]/g;
 
 export function reshapeArabic(input: string): string {
   if (!input) return input;
