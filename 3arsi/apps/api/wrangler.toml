@@ -1,0 +1,37 @@
+name = "arsi-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare D1 (database)
+[[d1_databases]]
+binding = "DB"
+database_name = "arsi-db"
+database_id = "00000000-0000-0000-0000-000000000000" # replace with real id after `wrangler d1 create`
+
+# Cloudflare KV (cache: generated packages, sessions blacklist, rate limits)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "00000000000000000000000000000000" # replace after `wrangler kv namespace create CACHE`
+
+# Cloudflare R2 (storage: PDF wedding books + secure exports)
+[[r2_buckets]]
+binding = "EXPORTS"
+bucket_name = "arsi-exports"
+
+# Embed the Arabic font (Amiri) as binary so the PDF generator can load it.
+[[rules]]
+type = "Data"
+globs = ["**/*.ttf"]
+fallthrough = true
+
+[vars]
+JWT_ISSUER = "3arsi"
+JWT_TTL_SECONDS = "604800"
+CHARGILY_BASE_URL = "https://pay.chargily.net/test/api/v2"
+PACKAGE_PRICE_DZD = "4900"
+APP_URL = "http://localhost:3000"
+
+# Secrets (set with `wrangler secret put <NAME>`):
+#   JWT_SECRET, SIGNED_URL_SECRET, CHARGILY_SECRET_KEY,
+#   CHARGILY_WEBHOOK_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
