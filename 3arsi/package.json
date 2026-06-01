@@ -1,0 +1,28 @@
+{
+  "name": "3arsi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "3ARSI — Wedding Operating System for Algerian brides (SaaS)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@3arsi/core && npm run build --workspace=@3arsi/web",
+    "build:core": "npm run build --workspace=@3arsi/core",
+    "build:web": "npm run build --workspace=@3arsi/web",
+    "build:api": "npm run build --workspace=@3arsi/api",
+    "dev:web": "npm run dev --workspace=@3arsi/web",
+    "dev:api": "npm run dev --workspace=@3arsi/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspace=@3arsi/core",
+    "db:apply:local": "wrangler d1 execute arsi-db --local --file=./db/schema.sql --config ./apps/api/wrangler.toml"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4"
+  }
+}
