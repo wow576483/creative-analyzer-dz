@@ -29,7 +29,7 @@ export async function persistPackage(env: Env, brideId: string, pkg: WeddingPack
       env.DB.prepare(
         `INSERT INTO tasks (id, bride_id, title, category, due_date, status, priority)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      ).bind(t.id, brideId, t.title, t.category, t.dueDate, t.status, t.priority),
+      ).bind(newId('task'), brideId, t.title, t.category, t.dueDate, t.status, t.priority),
     );
   });
 
